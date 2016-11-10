@@ -1,0 +1,1 @@
+Please insert TMDB API key in gradle.properties to run this application.

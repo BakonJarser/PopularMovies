@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_movie_details"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.cellblock70.popularmovies.MovieDetails">
+
+    <TextView
+        android:id="@+id/title_view"
+        style="@style/movie_detail_text_view"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"/>
+
+    <TextView
+        android:id="@+id/original_title_view"
+        style="@style/movie_detail_text_view"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"/>
+
+    <TextView
+        android:id="@+id/synopsis"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        style="@style/movie_detail_text_view"/>
+
+    <TextView
+        android:id="@+id/user_rating"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        style="@style/movie_detail_text_view"/>
+
+    <TextView
+        android:id="@+id/vote_count"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        style="@style/movie_detail_text_view"/>
+
+    <TextView
+        android:id="@+id/release_date"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        style="@style/movie_detail_text_view"/>
+
+</LinearLayout>
