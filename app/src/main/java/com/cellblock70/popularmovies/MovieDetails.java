@@ -333,7 +333,7 @@ public class MovieDetails extends AppCompatActivity {
                     String name = result.getString("name");
                     String id = result.getString("id");
                     // Make sure this is a youtube video.
-                    if (!site.equals("youtube")) {
+                    if (!site.equalsIgnoreCase("youtube")) {
                         Log.i(LOG_TAG, name + " is not a youtube video.");
                         continue;
                     }
@@ -349,7 +349,9 @@ public class MovieDetails extends AppCompatActivity {
                     reviewContents.put(MovieDetailsEntry.COL_MOVIE_ID, movieId);
                     dbValues[i] = reviewContents;
                 }
-                getContentResolver().bulkInsert(MovieTrailersEntry.CONTENT_URI, dbValues);
+                if (dbValues.length > 0) {
+                    getContentResolver().bulkInsert(MovieTrailersEntry.CONTENT_URI, dbValues);
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -378,7 +380,9 @@ public class MovieDetails extends AppCompatActivity {
                     trailerContents.put(MovieDetailsEntry.COL_MOVIE_ID, movieId);
                     dbValues[i] = trailerContents;
                 }
-                getContentResolver().bulkInsert(MovieReviewsEntry.CONTENT_URI, dbValues);
+                if (dbValues.length > 0) {
+                    getContentResolver().bulkInsert(MovieReviewsEntry.CONTENT_URI, dbValues);
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }

@@ -193,6 +193,7 @@ public class MovieProvider extends ContentProvider {
         SQLiteDatabase db = null;
         try {
             db = mMovieDbHelper.getWritableDatabase();
+            db.beginTransaction();
             int uriCode = sUriMatcher.match(uri);
             String tableName;
             switch (uriCode) {

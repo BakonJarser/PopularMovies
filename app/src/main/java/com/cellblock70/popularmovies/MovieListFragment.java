@@ -213,6 +213,9 @@ public class MovieListFragment extends Fragment {
             }
 
             try {
+                if (jsonString == null || jsonString.isEmpty()) {
+                    throw new JSONException("null or empty json string");
+                }
                 JSONObject object = new JSONObject(jsonString);
                 JSONArray movieArray = object.getJSONArray(getString(R.string.results));
                 ContentValues[] contentValues = new ContentValues[movieArray.length()];
