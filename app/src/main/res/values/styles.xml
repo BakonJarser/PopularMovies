@@ -9,9 +9,9 @@
     </style>
 
     <style name="movie_detail_text_view">
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textStyle">normal|bold</item>
+        <item name="android:textStyle">normal</item>
         <item name="android:textColor">?android:attr/colorBackground</item>
         <item name="android:textIsSelectable">true</item>
     </style>
@@ -21,10 +21,12 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:gravity">left|center_vertical</item>
-        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Medium</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:textColor">@color/colorPrimaryLight</item>
-        <item name="android:padding">0dp</item>
-        <item name="android:layout_margin">0dp</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingRight">0dp</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
         <item name="android:minHeight">0dp</item>
         <item name="android:minWidth">0dp</item>
     </style>

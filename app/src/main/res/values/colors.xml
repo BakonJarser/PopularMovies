@@ -7,6 +7,7 @@
     <color name="colorAccentDark">#c56200</color>
     <color name="colorAccentLight">#ffc246</color>
     <color name="colorHighlight">#CB3f51b5</color>
-    <color name="colorHighlightGray">#AA000000</color>
+    <color name="colorHighlightGray">#87000000</color>
     <color name="transparent">#00000000</color>
+    <color name="text">#ffffff</color>
 </resources>
