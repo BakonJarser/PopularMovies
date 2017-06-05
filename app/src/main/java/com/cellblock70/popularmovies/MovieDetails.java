@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -41,6 +42,7 @@ public class MovieDetails extends AppCompatActivity {
     private LinearLayout mTrailerLinearLayout;
     private LinearLayout mReviewLinearLayout;
     private Integer movieId;
+    private int[] position = null;
 
     /**
      * Updates the tables in the database to reflect the users new preference.
@@ -63,6 +65,17 @@ public class MovieDetails extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setupActionBar();
         setContentView(R.layout.activity_movie_details);
+        loadMovieDetailsIntoView();
+        if (savedInstanceState != null) {
+            Log.e(LOG_TAG, "Saved instance wasn't null");
+
+            // Save the scroll position information but don't scroll until all views have been
+            // dynamically loaded.
+            position = savedInstanceState.getIntArray("ARTICLE_SCROLL_POSITION");
+        }
+    }
+
+    private void loadMovieDetailsIntoView() {
         final View rootView = findViewById(R.id.details_background_image_layout);
         mTrailerLinearLayout = (LinearLayout) rootView.findViewById(R.id.trailer_list_view);
         mReviewLinearLayout = (LinearLayout) rootView.findViewById(R.id.review_list_view);
@@ -76,41 +89,7 @@ public class MovieDetails extends AppCompatActivity {
 
         // If the movie is a favorite then all of the information is already stored in the db.
         if (details != null && details.moveToFirst()) {
-            // Get the trailers from the database.
-            Cursor trailers = getContentResolver().query(MovieTrailersEntry.CONTENT_URI, null,
-                    MovieDetailsEntry.COL_MOVIE_ID + " =? ", new String[]{movieId.toString()}, null);
-            if (trailers == null || !trailers.moveToFirst()) {
-                Log.e(LOG_TAG, "Failed to retrieve trailers for movie " + movieId);
-            } else {
-                int nameColIndex = trailers.getColumnIndex(MovieTrailersEntry.COL_NAME);
-                int keyColIndex = trailers.getColumnIndex(MovieTrailersEntry.COL_LINK);
-
-                // Load each trailer button into the view.
-                for (int i = 0; i < trailers.getCount(); i++) {
-                    mTrailerLinearLayout.addView(getTrailerButton(trailers.getString(keyColIndex),
-                            trailers.getString(nameColIndex)));
-                    trailers.moveToNext();
-                }
-                trailers.close();
-            }
-
-            // Get the reviews from the database.
-            Cursor reviews = getContentResolver().query(MovieReviewsEntry.CONTENT_URI, null,
-                    MovieDetailsEntry.COL_MOVIE_ID + " =? ", new String[]{movieId.toString()}, null);
-            if (reviews == null || !reviews.moveToFirst()) {
-                Log.e(LOG_TAG, "Failed to retrieve reviews for movie " + movieId);
-            } else {
-                int authorColIndex = reviews.getColumnIndex(MovieReviewsEntry.COL_AUTHOR);
-                int reviewColIndex = reviews.getColumnIndex(MovieReviewsEntry.COL_REVIEW);
-
-                // Load each review into the view.
-                for (int i = 0; i < reviews.getCount(); i++) {
-                    mReviewLinearLayout.addView(getReviewLayout(reviews.getString
-                            (authorColIndex), reviews.getString(reviewColIndex)));
-                    reviews.moveToNext();
-                }
-                reviews.close();
-            }
+            getMovieFromDatabase();
         } else {
             // The movie wasn't in the database so get the reviews and trailers from the server.
             new LoadTrailersAndReviewsTask().execute(movieId);
@@ -194,7 +173,79 @@ public class MovieDetails extends AppCompatActivity {
             if (details != null) {
                 details.close();
             }
+
+            if (position != null) {
+                final ScrollView scrollView = (ScrollView) findViewById(R.id
+                        .activity_movie_details_scrollview);
+                Log.e(LOG_TAG, "position wasn't null " + position[0] + "  " + position[1]);
+                scrollView.post(new Runnable() {
+                    public void run() {
+                        Log.e(LOG_TAG, "scrolling");
+                        scrollView.scrollTo(position[0], position[1]);
+                    }
+                });
+            }
         }
+    }
+
+    private void getMovieFromDatabase() {
+        // Get the trailers from the database.
+        Cursor trailers = getContentResolver().query(MovieTrailersEntry.CONTENT_URI, null,
+                MovieDetailsEntry.COL_MOVIE_ID + " =? ", new String[]{movieId.toString()}, null);
+        if (trailers == null || !trailers.moveToFirst()) {
+            Log.e(LOG_TAG, "Failed to retrieve trailers for movie " + movieId);
+        } else {
+            int nameColIndex = trailers.getColumnIndex(MovieTrailersEntry.COL_NAME);
+            int keyColIndex = trailers.getColumnIndex(MovieTrailersEntry.COL_LINK);
+
+            // Load each trailer button into the view.
+            for (int i = 0; i < trailers.getCount(); i++) {
+                mTrailerLinearLayout.addView(getTrailerButton(trailers.getString(keyColIndex),
+                        trailers.getString(nameColIndex)));
+                trailers.moveToNext();
+            }
+            trailers.close();
+        }
+
+        // Get the reviews from the database.
+        Cursor reviews = getContentResolver().query(MovieReviewsEntry.CONTENT_URI, null,
+                MovieDetailsEntry.COL_MOVIE_ID + " =? ", new String[]{movieId.toString()}, null);
+        if (reviews == null || !reviews.moveToFirst()) {
+            Log.e(LOG_TAG, "Failed to retrieve reviews for movie " + movieId);
+        } else {
+            int authorColIndex = reviews.getColumnIndex(MovieReviewsEntry.COL_AUTHOR);
+            int reviewColIndex = reviews.getColumnIndex(MovieReviewsEntry.COL_REVIEW);
+
+            // Load each review into the view.
+            for (int i = 0; i < reviews.getCount(); i++) {
+                mReviewLinearLayout.addView(getReviewLayout(reviews.getString
+                        (authorColIndex), reviews.getString(reviewColIndex)));
+                reviews.moveToNext();
+            }
+            reviews.close();
+        }
+
+        final ScrollView scrollView = (ScrollView) findViewById(R.id
+                .activity_movie_details_scrollview);
+
+        if (position != null) {
+            Log.e(LOG_TAG, "position wasn't null " + position[0] + "  " + position[1]);
+            scrollView.post(new Runnable() {
+                public void run() {
+                    Log.e(LOG_TAG, "scrolling");
+                    scrollView.scrollTo(position[0], position[1]);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        ScrollView scrollView = (ScrollView) findViewById(R.id.activity_movie_details_scrollview);
+        Log.e(LOG_TAG, "Y: " + scrollView.getScrollY());
+        outState.putIntArray("ARTICLE_SCROLL_POSITION",
+                new int[]{scrollView.getScrollX(), scrollView.getScrollY()});
     }
 
     /**
@@ -219,6 +270,7 @@ public class MovieDetails extends AppCompatActivity {
     private LinearLayout getReviewLayout(String author, String content) {
         LinearLayout reviewLayout = (LinearLayout) getLayoutInflater().inflate(R.layout
                 .movie_review, null);
+        reviewLayout.setId(author.hashCode() + content.hashCode());
         ((TextView) reviewLayout.findViewById(R.id.reviewer_text_view)).setText(author);
         ((TextView) reviewLayout.findViewById(R.id.review_content_text_view)).setText
                 (content);
@@ -236,6 +288,7 @@ public class MovieDetails extends AppCompatActivity {
     private Button getTrailerButton(String key, String name) {
         Button button = (Button) getLayoutInflater().inflate(R.layout.trailer_button, null);
         button.setText(name);
+        button.setId(key.hashCode() + name.hashCode());
         final Uri uri = Uri.parse("https://youtube.com/").buildUpon()
                 .appendPath("watch")
                 .appendQueryParameter("v", key).build();
@@ -385,6 +438,19 @@ public class MovieDetails extends AppCompatActivity {
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
+            }
+
+            final ScrollView scrollView = (ScrollView) findViewById(R.id
+                    .activity_movie_details_scrollview);
+
+            if (position != null) {
+                Log.e(LOG_TAG, "position wasn't null " + position[0] + "  " + position[1]);
+                scrollView.post(new Runnable() {
+                    public void run() {
+                        Log.e(LOG_TAG, "scrolling");
+                        scrollView.scrollTo(position[0], position[1]);
+                    }
+                });
             }
         }
     }
