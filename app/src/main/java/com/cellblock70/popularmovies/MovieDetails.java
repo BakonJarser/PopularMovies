@@ -78,7 +78,7 @@ public class MovieDetails extends AppCompatActivity {
     }
 
     private void loadMovieDetailsIntoView() {
-        final View rootView = findViewById(R.id.details_background_image_layout);
+        final View rootView = findViewById(R.id.activity_movie_details_scrollview);
         mTrailerLinearLayout = rootView.findViewById(R.id.trailer_list_view);
         mReviewLinearLayout = rootView.findViewById(R.id.review_list_view);
 
