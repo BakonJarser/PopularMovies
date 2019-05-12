@@ -3,27 +3,29 @@ package com.cellblock70.popularmovies;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.cellblock70.popularmovies.data.PopularMoviesContract.MovieDetailsEntry;
 import com.cellblock70.popularmovies.data.PopularMoviesContract.MovieReviewsEntry;
 import com.cellblock70.popularmovies.data.PopularMoviesContract.MovieTrailersEntry;
-import com.squareup.picasso.Callback;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -77,8 +79,8 @@ public class MovieDetails extends AppCompatActivity {
 
     private void loadMovieDetailsIntoView() {
         final View rootView = findViewById(R.id.details_background_image_layout);
-        mTrailerLinearLayout = (LinearLayout) rootView.findViewById(R.id.trailer_list_view);
-        mReviewLinearLayout = (LinearLayout) rootView.findViewById(R.id.review_list_view);
+        mTrailerLinearLayout = rootView.findViewById(R.id.trailer_list_view);
+        mReviewLinearLayout = rootView.findViewById(R.id.review_list_view);
 
         movieId = getIntent().getIntExtra(MovieDetailsEntry.COL_MOVIE_ID, -1);
 
@@ -107,8 +109,7 @@ public class MovieDetails extends AppCompatActivity {
         }
 
         try {
-            String backdropUrl;
-            final ImageView posterView = new ImageView(this);
+            final String backdropUrl;
             DisplayMetrics metrics = new DisplayMetrics();
             getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
@@ -121,22 +122,24 @@ public class MovieDetails extends AppCompatActivity {
                 backdropUrl = details.getString(backDropColInt);
             }
 
-            Picasso.with(this).load(backdropUrl).resize(metrics.widthPixels, metrics
-                    .heightPixels).centerCrop().into(posterView, new Callback() {
+            Glide.with(this).load(backdropUrl).override(metrics.widthPixels, metrics
+                    .heightPixels).centerCrop().into(new CustomTarget<Drawable>() {
                 @Override
-                public void onSuccess() {
-                    rootView.setBackground(posterView.getDrawable());
+                public void onLoadCleared(@Nullable Drawable placeholder) {
+                    Log.e(LOG_TAG, "Failed to load image.  Load was canceled.");
                 }
 
                 @Override
-                public void onError() {
-                    Log.e(LOG_TAG, "Failed to load image.");
+                public void onResourceReady(@NonNull Drawable resource, @Nullable Transition transition) {
+                    rootView.setBackground(resource);
+
                 }
+
             });
 
             int favoriteColInt = details.getColumnIndex(MovieDetailsEntry.COL_FAVORITE);
             String favorite = details.getString(favoriteColInt);
-            ToggleButton favoriteButton = ((ToggleButton) rootView.findViewById(R.id.favorite_button));
+            ToggleButton favoriteButton = rootView.findViewById(R.id.favorite_button);
 
             if (favorite.equals("Y")) {
                 favoriteButton.setChecked(true);
@@ -175,8 +178,7 @@ public class MovieDetails extends AppCompatActivity {
             }
 
             if (position != null) {
-                final ScrollView scrollView = (ScrollView) findViewById(R.id
-                        .activity_movie_details_scrollview);
+                final ScrollView scrollView = findViewById(R.id.activity_movie_details_scrollview);
                 Log.e(LOG_TAG, "position wasn't null " + position[0] + "  " + position[1]);
                 scrollView.post(new Runnable() {
                     public void run() {
@@ -225,8 +227,7 @@ public class MovieDetails extends AppCompatActivity {
             reviews.close();
         }
 
-        final ScrollView scrollView = (ScrollView) findViewById(R.id
-                .activity_movie_details_scrollview);
+        final ScrollView scrollView = findViewById(R.id.activity_movie_details_scrollview);
 
         if (position != null) {
             Log.e(LOG_TAG, "position wasn't null " + position[0] + "  " + position[1]);
@@ -242,7 +243,7 @@ public class MovieDetails extends AppCompatActivity {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        ScrollView scrollView = (ScrollView) findViewById(R.id.activity_movie_details_scrollview);
+        ScrollView scrollView = findViewById(R.id.activity_movie_details_scrollview);
         Log.e(LOG_TAG, "Y: " + scrollView.getScrollY());
         outState.putIntArray("ARTICLE_SCROLL_POSITION",
                 new int[]{scrollView.getScrollX(), scrollView.getScrollY()});
@@ -440,8 +441,7 @@ public class MovieDetails extends AppCompatActivity {
                 e.printStackTrace();
             }
 
-            final ScrollView scrollView = (ScrollView) findViewById(R.id
-                    .activity_movie_details_scrollview);
+            final ScrollView scrollView = findViewById(R.id.activity_movie_details_scrollview);
 
             if (position != null) {
                 Log.e(LOG_TAG, "position wasn't null " + position[0] + "  " + position[1]);

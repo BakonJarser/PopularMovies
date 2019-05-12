@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.OrientationHelper;
@@ -22,8 +23,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
 import com.cellblock70.popularmovies.data.PopularMoviesContract;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -49,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_movie_list);
-        RecyclerView movieGrid = (RecyclerView) findViewById(R.id.movie_grid);
+        RecyclerView movieGrid = findViewById(R.id.movie_grid);
         int columns = getResources().getConfiguration().orientation == OrientationHelper
                 .VERTICAL ? 2 : 4;
         GridLayoutManager layoutManager = new GridLayoutManager(this, columns,
@@ -278,8 +279,9 @@ public class MainActivity extends AppCompatActivity {
             mContext = context;
         }
 
+        @NonNull
         @Override
-        public PosterViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        public PosterViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(MainActivity.this).inflate(R.layout
                     .activity_movie_grid_item, parent, false);
             view.setFocusable(true);
@@ -287,10 +289,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onBindViewHolder(PosterViewHolder holder, int position) {
+        public void onBindViewHolder(@NonNull PosterViewHolder holder, int position) {
             ImageView posterView = holder.posterView;
             posterView.setScaleType(ImageView.ScaleType.FIT_XY);
-            Picasso.with(mContext).load(posters.get(position)).into(posterView);
+            Glide.with(mContext).load(posters.get(position)).into(posterView);
         }
 
         @Override
@@ -305,7 +307,7 @@ public class MainActivity extends AppCompatActivity {
             PosterViewHolder(View itemView) {
                 super(itemView);
 
-                posterView = (ImageView) itemView.findViewById(R.id.activity_movie_grid_item);
+                posterView = itemView.findViewById(R.id.activity_movie_grid_item);
                 posterView.setScaleType(ImageView.ScaleType.FIT_XY);
                 posterView.setOnClickListener(this);
             }
