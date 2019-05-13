@@ -1,7 +1,7 @@
 package com.cellblock70.popularmovies;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 
 public class MovieGridItem extends AppCompatActivity {
 

@@ -5,16 +5,17 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.OrientationHelper;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.OrientationHelper;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -54,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
         int columns = getResources().getConfiguration().orientation == OrientationHelper
                 .VERTICAL ? 2 : 4;
         GridLayoutManager layoutManager = new GridLayoutManager(this, columns,
-                GridLayoutManager.VERTICAL, false);
+                RecyclerView.VERTICAL, false);
         movieGrid.setLayoutManager(layoutManager);
         movieGrid.setHasFixedSize(true);
         mMovieAdapter = new ImageViewAdapter(this);
@@ -123,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
                     (MainActivity.this);
             String movieListType = sharedPreferences.getString(getString(R.string.movie_list_type), "popular");
 
-            if (movieListType.equals(getString(R.string.favorites))) {
+            if (getString(R.string.favorites).equals(movieListType)) {
                 getFavoritesFromDatabase(movieListType);
             } else {
                 getListFromServer(movieListType);
