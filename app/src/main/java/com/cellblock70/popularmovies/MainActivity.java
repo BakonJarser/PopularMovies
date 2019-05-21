@@ -1,21 +1,12 @@
 package com.cellblock70.popularmovies;
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.OrientationHelper;
-import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -24,8 +15,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.OrientationHelper;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
-import com.cellblock70.popularmovies.data.PopularMoviesContract;
+import com.cellblock70.popularmovies.data.Movie;
+import com.cellblock70.popularmovies.data.MovieRepository;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,19 +37,26 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     public static final String POSTERS = "posters";
     public static final String MOVIE_IDS = "movieIds";
+    // This column is the primary key that uniquely identifies the movie.
+    public static final String MOVIE_ID = "movie_id";
     private ImageViewAdapter mMovieAdapter;
     private ArrayList<String> posters = new ArrayList<>();
     private int[] movieIds;
+    private MovieRepository movieRepository;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_movie_list);
+        if (movieRepository == null) {
+             movieRepository = new MovieRepository(this);
+        }
         RecyclerView movieGrid = findViewById(R.id.movie_grid);
         int columns = getResources().getConfiguration().orientation == OrientationHelper
                 .VERTICAL ? 2 : 4;
@@ -65,8 +71,7 @@ public class MainActivity extends AppCompatActivity {
             posters = savedInstanceState.getStringArrayList(POSTERS);
             movieIds = savedInstanceState.getIntArray(MOVIE_IDS);
         } else {
-            AsyncTask<Void, Void, Void> task = new PopularMovieTask();
-            task.execute();
+            new PopularMovieTask().execute();
         }
     }
 
@@ -103,14 +108,6 @@ public class MainActivity extends AppCompatActivity {
 
     private class PopularMovieTask extends AsyncTask<Void, Void, Void> {
         private static final String TMDB_API_KEY = BuildConfig.TMDB_MAP_API_KEY;
-        // JSON movie object keys.
-        private static final String ORIGINAL_TITLE = "original_title";
-        private static final String TITLE = "title";
-        private static final String OVERVIEW = "overview";
-        private static final String VOTE_AVERAGE = "vote_average";
-        private static final String VOTE_COUNT = "vote_count";
-        private static final String RELEASE_DATE = "release_date";
-        private static final String MOVIE_ID = "id";
         private final String LOG_TAG = PopularMovieTask.class.getSimpleName();
         private final String BASE_URL = getString(R.string.base_url);
         private final String PAGE = getString(R.string.page);
@@ -141,26 +138,13 @@ public class MainActivity extends AppCompatActivity {
             // TODO Get and store images in the database instead of loading them every time.
 
             if (movieListType.equals(getString(R.string.favorites))) {
-                Cursor posterCursor = getContentResolver().query
-                        (PopularMoviesContract.MovieDetailsEntry.CONTENT_URI,
-                                new String[]{PopularMoviesContract.MovieDetailsEntry
-                                        .COL_POSTER_PATH, PopularMoviesContract.MovieDetailsEntry.COL_MOVIE_ID},
-                                PopularMoviesContract.MovieDetailsEntry.COL_FAVORITE + "=? ",
-                                new String[]{"Y"}, null);
-                if (posterCursor == null) {
-                    Log.e(LOG_TAG, "Failed to retrieve favorite movie poster paths from the database");
-                } else {
-                    movieIds = new int[posterCursor.getCount()];
-                    for (posterCursor.moveToFirst(); !posterCursor.isAfterLast(); posterCursor
-                            .moveToNext()) {
-                        String posterPath = posterCursor.getString(posterCursor.getColumnIndex
-                                (PopularMoviesContract.MovieDetailsEntry.COL_POSTER_PATH));
-                        posters.add(posterPath);
-                        Integer movieId = posterCursor.getInt(posterCursor.getColumnIndex
-                                (PopularMoviesContract.MovieDetailsEntry.COL_MOVIE_ID));
-                        movieIds[posterCursor.getPosition()] = movieId;
-                    }
-                    posterCursor.close();
+                Log.e("movieListType", "favorites");
+                List<Movie> movieList = movieRepository.getFavoritesAlreadyInBackground();
+                movieIds = new int[movieList.size()];
+                int index = 0;
+                for (Movie movie : movieList) {
+                    posters.add(movie.getPosterPath());
+                    movieIds[index++] = movie.getId();
                 }
             }
         }
@@ -226,37 +210,25 @@ public class MainActivity extends AppCompatActivity {
                 }
                 JSONObject object = new JSONObject(jsonString);
                 JSONArray movieArray = object.getJSONArray(getString(R.string.results));
-                ContentValues[] contentValues = new ContentValues[movieArray.length()];
+                List<Movie> movieList = new ArrayList<>(movieArray.length());
                 movieIds = new int[movieArray.length()];
 
                 for (int i = 0; i < movieArray.length(); i++) {
-                    JSONObject movie = (JSONObject) movieArray.get(i);
-                    ContentValues movieValues = new ContentValues();
-                    Integer movieId = movie.getInt(MOVIE_ID);
-                    movieIds[i] = movieId;
-                    movieValues.put(PopularMoviesContract.MovieDetailsEntry.COL_MOVIE_ID, movieId);
-                    movieValues.put(PopularMoviesContract.MovieDetailsEntry.COL_ORIGINAL_TITLE, movie.getString(ORIGINAL_TITLE));
-                    movieValues.put(PopularMoviesContract.MovieDetailsEntry.COL_SYNOPSIS, movie.getString(OVERVIEW));
-                    movieValues.put(PopularMoviesContract.MovieDetailsEntry.COL_TITLE, movie.getString(TITLE));
-                    movieValues.put(PopularMoviesContract.MovieDetailsEntry.COL_USER_RATING, movie.getString(VOTE_AVERAGE));
-                    movieValues.put(PopularMoviesContract.MovieDetailsEntry.COL_USER_REVIEWS, movie.getString(VOTE_COUNT));
-                    movieValues.put(PopularMoviesContract.MovieDetailsEntry.COL_RELEASE_DATE, movie.getString(RELEASE_DATE));
-                    String posterPath = getString(R.string.base_image_url)
-                            + getString(R.string.poster_size) + movie.get(getString(R.string.poster_path));
-                    movieValues.put(PopularMoviesContract.MovieDetailsEntry.COL_POSTER_PATH, posterPath);
+                    Gson gson = new Gson();
+                    Movie movie = gson.fromJson(movieArray.get(i).toString(), Movie.class);
+                    movieIds[i] = movie.getId();
+                    String posterPath = getString(R.string.base_image_url) + getString(R.string.poster_size) + movie.getPosterPath();
+                    movie.setPosterPath(posterPath);
                     posters.add(posterPath);
                     String backdropUrl = getString(R.string.base_image_url) + getString(R.string
-                            .backdrop_size) + movie.get(getString(R.string.backdrop_path));
-                    movieValues.put(PopularMoviesContract.MovieDetailsEntry.COL_BACKDROP_PATH, backdropUrl);
-
-                    contentValues[i] = movieValues;
+                            .backdrop_size) + movie.getBackdropPath();
+                    movie.setBackdropPath(backdropUrl);
+                    boolean fav = movieRepository.isFavoriteAlreadyInBackground(movie.getId());
+                    movie.setFavorite(fav);
+                    movieList.add(movie);
                 }
 
-                ContentResolver contentResolver = getContentResolver();
-                int rowsInserted = contentResolver.bulkInsert(PopularMoviesContract.MovieDetailsEntry.CONTENT_URI,
-                        contentValues);
-                Log.i(LOG_TAG, "Inserted " + rowsInserted + " rows into the movie details " +
-                        "database.");
+                movieRepository.insertMoviesAlreadyInBackground(movieList);
 
             } catch (JSONException e) {
                 Log.e(LOG_TAG, e.getMessage());
@@ -316,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent downloadIntent = new Intent(MainActivity.this,
-                        MovieDetails.class).putExtra(PopularMoviesContract.MovieDetailsEntry.COL_MOVIE_ID,
+                        MovieDetails.class).putExtra(MOVIE_ID,
                         movieIds[getAdapterPosition()]);
                 startActivity(downloadIntent);
             }

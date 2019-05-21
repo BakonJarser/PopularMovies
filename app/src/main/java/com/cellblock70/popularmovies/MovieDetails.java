@@ -1,16 +1,10 @@
 package com.cellblock70.popularmovies;
 
-import android.content.ContentValues;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -20,12 +14,20 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
-import com.cellblock70.popularmovies.data.PopularMoviesContract.MovieDetailsEntry;
-import com.cellblock70.popularmovies.data.PopularMoviesContract.MovieReviewsEntry;
-import com.cellblock70.popularmovies.data.PopularMoviesContract.MovieTrailersEntry;
+import com.cellblock70.popularmovies.data.CompleteMovie;
+import com.cellblock70.popularmovies.data.Movie;
+import com.cellblock70.popularmovies.data.MovieRepository;
+import com.cellblock70.popularmovies.data.MovieReview;
+import com.cellblock70.popularmovies.data.MovieTrailer;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,6 +39,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MovieDetails extends AppCompatActivity {
 
@@ -45,6 +49,7 @@ public class MovieDetails extends AppCompatActivity {
     private LinearLayout mReviewLinearLayout;
     private Integer movieId;
     private int[] position = null;
+    private MovieRepository movieRepository;
 
     /**
      * Updates the tables in the database to reflect the users new preference.
@@ -52,14 +57,7 @@ public class MovieDetails extends AppCompatActivity {
      * @param view - the view that was clicked to toggle the favorites.
      */
     public void onFavoriteClicked(View view) {
-        ContentValues newValue = new ContentValues(1);
-        String favorite = ((ToggleButton) view).isChecked() ? "Y" : "N";
-        newValue.put(MovieDetailsEntry.COL_FAVORITE, favorite);
-        String where = MovieDetailsEntry.COL_MOVIE_ID + " =?";
-        String[] argument = new String[]{movieId.toString()};
-        getContentResolver().update(MovieDetailsEntry.CONTENT_URI, newValue, where, argument);
-        getContentResolver().update(MovieReviewsEntry.CONTENT_URI, newValue, where, argument);
-        getContentResolver().update(MovieTrailersEntry.CONTENT_URI, newValue, where, argument);
+        movieRepository.updateFavorite(((ToggleButton) view).isChecked(), movieId);
     }
 
     @Override
@@ -67,6 +65,9 @@ public class MovieDetails extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setupActionBar();
         setContentView(R.layout.activity_movie_details);
+        if (movieRepository == null) {
+            movieRepository = new MovieRepository(this);
+        }
         loadMovieDetailsIntoView();
         if (savedInstanceState != null) {
             Log.e(LOG_TAG, "Saved instance wasn't null");
@@ -82,151 +83,94 @@ public class MovieDetails extends AppCompatActivity {
         mTrailerLinearLayout = rootView.findViewById(R.id.trailer_list_view);
         mReviewLinearLayout = rootView.findViewById(R.id.review_list_view);
 
-        movieId = getIntent().getIntExtra(MovieDetailsEntry.COL_MOVIE_ID, -1);
+        movieId = getIntent().getIntExtra(MainActivity.MOVIE_ID, -1);
 
-        // See if the movie is a user's favorite.
-        Cursor details = getContentResolver().query(MovieDetailsEntry.CONTENT_URI, null,
-                MovieDetailsEntry.COL_MOVIE_ID + " =? AND " + MovieDetailsEntry.COL_FAVORITE + " =?",
-                new String[]{movieId.toString(), "Y"}, null);
-
-        // If the movie is a favorite then all of the information is already stored in the db.
-        if (details != null && details.moveToFirst()) {
-            getMovieFromDatabase();
-        } else {
-            // The movie wasn't in the database so get the reviews and trailers from the server.
+        CompleteMovie completeMovie = movieRepository.getCompleteMovie(movieId);
+        Movie movie = completeMovie.getMovie();
+        if (completeMovie.getTrailerList().isEmpty() || completeMovie.getReviewList().isEmpty()) {
             new LoadTrailersAndReviewsTask().execute(movieId);
-
-            // The movie details are in the database since they are loaded and stored when the
-            // movie list is loaded.
-            details = getContentResolver().query(MovieDetailsEntry
-                    .CONTENT_URI, null, MovieDetailsEntry.COL_MOVIE_ID + " = ? ", new
-                    String[]{movieId.toString()}, null);
+        } else {
+            populateReviewAndTrailerViews(completeMovie);
         }
 
-        if (details == null || !details.moveToFirst()) {
+        if (movie == null) {
             Log.e(LOG_TAG, "Movie doesn't exist in database:" + movieId);
             ((TextView) rootView.findViewById(R.id.title_view)).setText(R.string.error_could_not_find_movie_in_db);
-        }
+        } else {
 
-        try {
-            final String backdropUrl;
-            DisplayMetrics metrics = new DisplayMetrics();
-            getWindowManager().getDefaultDisplay().getMetrics(metrics);
+            try {
+                final String backdropUrl;
+                DisplayMetrics metrics = new DisplayMetrics();
+                getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
-            // If in landscape then load the movie backdrop, else load the movie poster.
-            if (metrics.widthPixels > metrics.heightPixels) {
-                int backDropColInt = details.getColumnIndex(MovieDetailsEntry.COL_BACKDROP_PATH);
-                backdropUrl = details.getString(backDropColInt);
-            } else {
-                int backDropColInt = details.getColumnIndex(MovieDetailsEntry.COL_POSTER_PATH);
-                backdropUrl = details.getString(backDropColInt);
-            }
-
-            Glide.with(this).load(backdropUrl).override(metrics.widthPixels, metrics
-                    .heightPixels).centerCrop().into(new CustomTarget<Drawable>() {
-                @Override
-                public void onLoadCleared(@Nullable Drawable placeholder) {
-                    Log.e(LOG_TAG, "Failed to load image.  Load was canceled.");
+                // If in landscape then load the movie backdrop, else load the movie poster.
+                if (metrics.widthPixels > metrics.heightPixels) {
+                    backdropUrl = movie.getBackdropPath();
+                } else {
+                    backdropUrl = movie.getPosterPath();
                 }
 
-                @Override
-                public void onResourceReady(@NonNull Drawable resource, @Nullable Transition transition) {
-                    rootView.setBackground(resource);
-
-                }
-
-            });
-
-            int favoriteColInt = details.getColumnIndex(MovieDetailsEntry.COL_FAVORITE);
-            String favorite = details.getString(favoriteColInt);
-            ToggleButton favoriteButton = rootView.findViewById(R.id.favorite_button);
-
-            if (favorite.equals("Y")) {
-                favoriteButton.setChecked(true);
-            } else {
-                favoriteButton.setChecked(false);
-            }
-
-            int origTitleColInt = details.getColumnIndex(MovieDetailsEntry.COL_ORIGINAL_TITLE);
-            String originalTitle = details.getString(origTitleColInt);
-            ((TextView) rootView.findViewById(R.id.original_title_view)).setText(originalTitle);
-
-            int titleColInt = details.getColumnIndex(MovieDetailsEntry.COL_TITLE);
-            String title = details.getString(titleColInt);
-            ((TextView) rootView.findViewById(R.id.title_view)).setText(title);
-
-            int synColInt = details.getColumnIndex(MovieDetailsEntry.COL_SYNOPSIS);
-            String synopsis = details.getString(synColInt);
-            ((TextView) rootView.findViewById(R.id.synopsis)).setText(synopsis);
-
-            int userRatingColInt = details.getColumnIndex(MovieDetailsEntry.COL_USER_RATING);
-            int voteCountColInt = details.getColumnIndex(MovieDetailsEntry.COL_USER_REVIEWS);
-            Double rating = details.getDouble(userRatingColInt);
-            Integer voteCount = details.getInt(voteCountColInt);
-            String userRating = rating + " (" + voteCount + " votes)";
-            ((TextView) rootView.findViewById(R.id.user_rating)).setText(userRating);
-
-            int releaseDateColInt = details.getColumnIndex(MovieDetailsEntry.COL_RELEASE_DATE);
-            String releaseDate = details.getString(releaseDateColInt);
-            ((TextView) rootView.findViewById(R.id.release_date)).setText(releaseDate);
-
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "onCreate: " + e.getMessage());
-        } finally {
-            if (details != null) {
-                details.close();
-            }
-
-            if (position != null) {
-                final ScrollView scrollView = findViewById(R.id.activity_movie_details_scrollview);
-                Log.e(LOG_TAG, "position wasn't null " + position[0] + "  " + position[1]);
-                scrollView.post(new Runnable() {
-                    public void run() {
-                        Log.e(LOG_TAG, "scrolling");
-                        scrollView.scrollTo(position[0], position[1]);
+                Glide.with(this).load(backdropUrl).override(metrics.widthPixels, metrics
+                        .heightPixels).centerCrop().into(new CustomTarget<Drawable>() {
+                    @Override
+                    public void onLoadCleared(@Nullable Drawable placeholder) {
+                        Log.e(LOG_TAG, "Failed to load image.  Load was canceled.");
                     }
+
+                    @Override
+                    public void onResourceReady(@NonNull Drawable resource, @Nullable Transition transition) {
+                        rootView.setBackground(resource);
+
+                    }
+
                 });
+                ToggleButton favoriteButton = rootView.findViewById(R.id.favorite_button);
+                favoriteButton.setChecked(movie.getFavorite());
+                ((TextView) rootView.findViewById(R.id.original_title_view)).setText(movie.getOriginalTitle());
+                ((TextView) rootView.findViewById(R.id.title_view)).setText(movie.getTitle());
+                ((TextView) rootView.findViewById(R.id.synopsis)).setText(movie.getSynopsis());
+                String userRating = movie.getRating() + " (" + movie.getReviews() + " votes)";
+                ((TextView) rootView.findViewById(R.id.user_rating)).setText(userRating);
+                ((TextView) rootView.findViewById(R.id.release_date)).setText(movie.getReleaseDate());
+
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "onCreate: " + e.getMessage());
+            } finally {
+                // todo Do I still need this or was this solving a bug that has been fixed in new android release?
+                if (position != null) {
+                    Log.e(LOG_TAG, "position wasn't null " + position[0] + "  " + position[1]);
+                    rootView.post(new Runnable() {
+                        public void run() {
+                            Log.e(LOG_TAG, "scrolling");
+                            rootView.scrollTo(position[0], position[1]);
+                        }
+                    });
+                }
             }
         }
     }
 
-    private void getMovieFromDatabase() {
-        // Get the trailers from the database.
-        Cursor trailers = getContentResolver().query(MovieTrailersEntry.CONTENT_URI, null,
-                MovieDetailsEntry.COL_MOVIE_ID + " =? ", new String[]{movieId.toString()}, null);
-        if (trailers == null || !trailers.moveToFirst()) {
+    private void populateReviewAndTrailerViews(CompleteMovie movie) {
+        if (movie.getTrailerList() == null || movie.getTrailerList().isEmpty()) {
             Log.e(LOG_TAG, "Failed to retrieve trailers for movie " + movieId);
         } else {
-            int nameColIndex = trailers.getColumnIndex(MovieTrailersEntry.COL_NAME);
-            int keyColIndex = trailers.getColumnIndex(MovieTrailersEntry.COL_LINK);
-
-            // Load each trailer button into the view.
-            for (int i = 0; i < trailers.getCount(); i++) {
-                mTrailerLinearLayout.addView(getTrailerButton(trailers.getString(keyColIndex),
-                        trailers.getString(nameColIndex)));
-                trailers.moveToNext();
+            List<MovieTrailer> trailerList = movie.getTrailerList();
+            for (MovieTrailer movieTrailer : trailerList) {
+                mTrailerLinearLayout.addView(getTrailerButton(movieTrailer.getLink(),
+                        movieTrailer.getName()));
             }
-            trailers.close();
         }
 
-        // Get the reviews from the database.
-        Cursor reviews = getContentResolver().query(MovieReviewsEntry.CONTENT_URI, null,
-                MovieDetailsEntry.COL_MOVIE_ID + " =? ", new String[]{movieId.toString()}, null);
-        if (reviews == null || !reviews.moveToFirst()) {
+        if (movie.getReviewList() == null || movie.getReviewList().isEmpty()) {
             Log.e(LOG_TAG, "Failed to retrieve reviews for movie " + movieId);
         } else {
-            int authorColIndex = reviews.getColumnIndex(MovieReviewsEntry.COL_AUTHOR);
-            int reviewColIndex = reviews.getColumnIndex(MovieReviewsEntry.COL_REVIEW);
-
             // Load each review into the view.
-            for (int i = 0; i < reviews.getCount(); i++) {
-                mReviewLinearLayout.addView(getReviewLayout(reviews.getString
-                        (authorColIndex), reviews.getString(reviewColIndex)));
-                reviews.moveToNext();
+            for (MovieReview review : movie.getReviewList()) {
+                mReviewLinearLayout.addView(getReviewLayout(review.getAuthor(), review.getReviewText()));
             }
-            reviews.close();
         }
 
+        // todo Do I still need this or was this solving a bug that has been fixed in new android release?
         final ScrollView scrollView = findViewById(R.id.activity_movie_details_scrollview);
 
         if (position != null) {
@@ -378,33 +322,24 @@ public class MovieDetails extends AppCompatActivity {
                 JSONObject trailers = jsonObject.getJSONObject(getString(R.string
                         .trailer_list_path));
                 JSONArray trailerResults = trailers.getJSONArray("results");
-                ContentValues[] dbValues = new ContentValues[trailerResults.length()];
+                List<MovieTrailer> movieTrailers = new ArrayList<>(trailerResults.length());
                 for (int i = 0; i < trailerResults.length(); i++) {
 
-                    JSONObject result = (JSONObject) trailerResults.get(i);
-                    String site = result.getString("site");
-                    String key = result.getString("key");
-                    String name = result.getString("name");
-                    String id = result.getString("id");
+                    Gson gson = new Gson();
+                    MovieTrailer movieTrailer = gson.fromJson(trailerResults.get(i).toString(), MovieTrailer.class);
+                    movieTrailer.setMovieId(movieId);
+                    movieTrailers.add(movieTrailer);
                     // Make sure this is a youtube video.
-                    if (!site.equalsIgnoreCase("youtube")) {
-                        Log.i(LOG_TAG, name + " is not a youtube video.");
+                    if (!movieTrailer.getSite().equalsIgnoreCase("youtube")) {
+                        Log.i(LOG_TAG, movieTrailer.getName() + " is not a youtube video.");
                         continue;
                     }
 
-                    Button button = getTrailerButton(key, name);
+                    Button button = getTrailerButton(movieTrailer.getLink(), movieTrailer.getName());
                     mTrailerLinearLayout.addView(button);
-
-                    ContentValues reviewContents = new ContentValues(4);
-                    reviewContents.put(MovieTrailersEntry.COL_NAME, name);
-                    reviewContents.put(MovieTrailersEntry.COL_ID, id);
-                    reviewContents.put(MovieTrailersEntry.COL_LINK, key);
-                    reviewContents.put(MovieTrailersEntry.COL_SITE, site);
-                    reviewContents.put(MovieDetailsEntry.COL_MOVIE_ID, movieId);
-                    dbValues[i] = reviewContents;
                 }
-                if (dbValues.length > 0) {
-                    getContentResolver().bulkInsert(MovieTrailersEntry.CONTENT_URI, dbValues);
+                if (!movieTrailers.isEmpty()) {
+                    movieRepository.insertTrailers(movieTrailers);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -415,34 +350,25 @@ public class MovieDetails extends AppCompatActivity {
                 JSONObject reviews = jsonObject.getJSONObject(getString(R.string
                         .review_list_path));
                 JSONArray reviewResults = reviews.getJSONArray("results");
-                ContentValues[] dbValues = new ContentValues[reviewResults.length()];
-
+                List<MovieReview> reviewList = new ArrayList<>(reviewResults.length());
                 for (int i = 0; i < reviewResults.length(); i++) {
-                    JSONObject review = (JSONObject) reviewResults.get(i);
-                    String author = review.getString("author").trim();
-                    String id = review.getString("id");
-                    String content = review.getString("content").trim();
+                    Gson gson = new Gson();
+                    MovieReview review = gson.fromJson(reviewResults.get(i).toString(), MovieReview.class);
+                    review.setMovieId(movieId);
+                    reviewList.add(review);
 
-                    LinearLayout reviewLayout = getReviewLayout(author, content);
+                    LinearLayout reviewLayout = getReviewLayout(review.getAuthor(), review.getReviewText());
                     mReviewLinearLayout.addView(reviewLayout);
-
-                    // Create a content values so that this can be added to the db.
-                    ContentValues trailerContents = new ContentValues(4);
-                    trailerContents.put(MovieReviewsEntry.COL_AUTHOR, author);
-                    trailerContents.put(MovieReviewsEntry.COL_ID, id);
-                    trailerContents.put(MovieReviewsEntry.COL_REVIEW, content);
-                    trailerContents.put(MovieDetailsEntry.COL_MOVIE_ID, movieId);
-                    dbValues[i] = trailerContents;
                 }
-                if (dbValues.length > 0) {
-                    getContentResolver().bulkInsert(MovieReviewsEntry.CONTENT_URI, dbValues);
+                if (!reviewList.isEmpty()) {
+                    movieRepository.insertReviews(reviewList);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
 
+            // todo Do I still need this or was this solving a bug that has been fixed in new android release?
             final ScrollView scrollView = findViewById(R.id.activity_movie_details_scrollview);
-
             if (position != null) {
                 Log.e(LOG_TAG, "position wasn't null " + position[0] + "  " + position[1]);
                 scrollView.post(new Runnable() {
