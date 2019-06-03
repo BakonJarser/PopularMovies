@@ -4,17 +4,57 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import androidx.lifecycle.LiveData;
+
+import com.cellblock70.popularmovies.AppExecutors;
+import com.cellblock70.popularmovies.data.database.CompleteMovie;
+import com.cellblock70.popularmovies.data.database.Movie;
+import com.cellblock70.popularmovies.data.database.MovieDao;
+import com.cellblock70.popularmovies.data.database.MovieDatabase;
+import com.cellblock70.popularmovies.data.database.MovieReview;
+import com.cellblock70.popularmovies.data.database.MovieTrailer;
+import com.cellblock70.popularmovies.data.network.MovieNetworkDataSource;
+
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class MovieRepository {
-
     private static final String LOG_TAG = "MovieRepository";
-    private MovieDao movieDao;
+    private final MovieDao movieDao;
+    private final AppExecutors executors;
+    private boolean initialized = false;
+    private static MovieRepository instance;
+    private final MovieNetworkDataSource movieDataSource;
 
-    public MovieRepository(Context context) {
-        MovieDatabase movieDb = MovieDatabase.getDatabase(context);
-        movieDao = movieDb.movieDao();
+    private MovieRepository(MovieDao movieDao, MovieNetworkDataSource dataSource,
+                            AppExecutors executors) {
+        this.movieDao = movieDao;
+        this.movieDataSource = dataSource;
+        this.executors = executors;
+
+        // TODO load the movies. Do I need to pass in the current movie list type?
+
+    }
+
+    private static MovieRepository getInstance(MovieDao movieDao, MovieNetworkDataSource dataSource,
+                                        AppExecutors executors) {
+        if (instance == null) {
+            synchronized (MovieRepository.class) {
+                if (instance == null) {
+                    Log.d(LOG_TAG, "Creating new instance of movie repository");
+                    instance = new MovieRepository(movieDao, dataSource, executors);
+                }
+            }
+        }
+        return instance;
+    }
+
+    public static MovieRepository provideRepository(Context context) {
+        MovieDatabase database = MovieDatabase.getDatabase(context.getApplicationContext());
+        AppExecutors executors = AppExecutors.getInstance();
+        MovieNetworkDataSource networkDataSource =
+                MovieNetworkDataSource.getInstance(context.getApplicationContext(), executors);
+        return MovieRepository.getInstance(database.movieDao(), networkDataSource, executors);
     }
 
     public void insertMoviesAlreadyInBackground(List<Movie> movies) {
@@ -33,25 +73,25 @@ public class MovieRepository {
         new UpdateFavoriteTask(movieDao, isFavorite, movieId).execute();
     }
 
-    public List<Movie> getFavoritesAlreadyInBackground() {
+    public LiveData<List<Movie>> getFavoritesAlreadyInBackground() {
         return movieDao.getFavorites();
     }
 
     public boolean isFavoriteAlreadyInBackground(int movieId) {
-        Movie movie = movieDao.getMovie(movieId);
-        return movie != null && movie.getFavorite();
+        LiveData<Movie> movie = movieDao.getMovie(movieId);
+        return movie.getValue() != null && movie.getValue().getFavorite();
     }
 
-    public CompleteMovie getCompleteMovie(Integer movieId) {
-        CompleteMovie movie = null;
-        try {
-            movie = new GetCompleteMovieTask(movieDao).execute(movieId).get();
-        } catch (ExecutionException e) {
-            Log.e(LOG_TAG, "Failed to execute getCompleteMovie");
-        } catch (InterruptedException e) {
-            Log.e(LOG_TAG, "getCompleteMovie interrupted");
-        }
-        return movie;
+    public LiveData<CompleteMovie> getCompleteMovie(Integer movieId) {
+        return movieDao.getMovieWithTrailersAndReviews(movieId);
+//        try {
+//            movie = new GetCompleteMovieTask(movieDao).execute(movieId).get();
+//        } catch (ExecutionException e) {
+//            Log.e(LOG_TAG, "Failed to execute getCompleteMovie");
+//        } catch (InterruptedException e) {
+//            Log.e(LOG_TAG, "getCompleteMovie interrupted");
+//        }
+//        return movie;
     }
 
     private static class InsertTrailersTask extends AsyncTask<MovieTrailer, Void, Void> {
@@ -82,7 +122,7 @@ public class MovieRepository {
         }
     }
 
-    private static class GetCompleteMovieTask extends AsyncTask<Integer, Void, CompleteMovie> {
+    private static class GetCompleteMovieTask extends AsyncTask<Integer, Void, LiveData<CompleteMovie>> {
 
         private MovieDao movieDao;
 
@@ -90,7 +130,7 @@ public class MovieRepository {
             this.movieDao = movieDao;
         }
         @Override
-        protected CompleteMovie doInBackground(Integer... movieId) {
+        protected LiveData<CompleteMovie> doInBackground(Integer... movieId) {
             return movieDao.getMovieWithTrailersAndReviews(movieId[0]);
         }
     }

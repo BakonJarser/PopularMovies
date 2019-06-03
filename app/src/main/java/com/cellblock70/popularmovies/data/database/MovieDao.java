@@ -1,10 +1,10 @@
-package com.cellblock70.popularmovies.data;
+package com.cellblock70.popularmovies.data.database;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
-import androidx.room.RoomWarnings;
 import androidx.room.Transaction;
 
 import java.util.List;
@@ -12,15 +12,18 @@ import java.util.List;
 @Dao
 public interface MovieDao {
 
+    @Query("SELECT * FROM details")
+    LiveData<List<Movie>> getMovies();
+
     @Query("SELECT * FROM details where movie_id = (:movieId)")
-    Movie getMovie(Integer movieId);
+    LiveData<Movie> getMovie(Integer movieId);
 
     @Query("SELECT * FROM details where favorite = 1")
-    List<Movie> getFavorites();
+    LiveData<List<Movie>> getFavorites();
 
     @Transaction
     @Query("SELECT * FROM details where movie_id = (:movieId)")
-    CompleteMovie getMovieWithTrailersAndReviews(Integer movieId);
+    LiveData<CompleteMovie> getMovieWithTrailersAndReviews(Integer movieId);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(Movie...movieDetails);

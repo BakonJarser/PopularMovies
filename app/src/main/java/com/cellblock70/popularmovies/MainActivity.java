@@ -17,12 +17,14 @@ import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.OrientationHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.cellblock70.popularmovies.data.Movie;
+import com.cellblock70.popularmovies.data.database.Movie;
 import com.cellblock70.popularmovies.data.MovieRepository;
 import com.google.gson.Gson;
 
@@ -55,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_movie_list);
         if (movieRepository == null) {
-             movieRepository = new MovieRepository(this);
+             movieRepository = MovieRepository.provideRepository(this);
         }
         RecyclerView movieGrid = findViewById(R.id.movie_grid);
         int columns = getResources().getConfiguration().orientation == OrientationHelper
@@ -71,8 +73,39 @@ public class MainActivity extends AppCompatActivity {
             posters = savedInstanceState.getStringArrayList(POSTERS);
             movieIds = savedInstanceState.getIntArray(MOVIE_IDS);
         } else {
-            new PopularMovieTask().execute();
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences
+                    (MainActivity.this);
+            String movieListType = sharedPreferences.getString(getString(R.string.movie_list_type), "popular");
+            if (getString(R.string.favorites).equals(movieListType)) {
+                getFavoritesFromDatabase();
+            } else {
+                new PopularMovieTask(movieListType).execute();
+            }
         }
+    }
+
+    /**
+     * Retrieves the movie poster paths for the user's favorites from the database and loads
+     * them into the adapter view.
+     */
+    private void getFavoritesFromDatabase() {
+        // TODO Get and store images in the database instead of loading them every time.
+
+        Log.e("movieListType", "favorites");
+        MovieViewModel movieViewModel = new MovieViewModel(MainActivity.this.getApplication());
+        LiveData<List<Movie>> favoriteData = movieViewModel.getFavorites();
+        favoriteData.observe(MainActivity.this, new Observer<List<Movie>>() {
+            @Override
+            public void onChanged(List<Movie> movies) {
+                Log.e("favorites", "onChanged");
+                movieIds = new int[movies.size()];
+                int index = 0;
+                for (Movie movie : movies) {
+                    posters.add(movie.getPosterPath());
+                    movieIds[index++] = movie.getId();
+                }
+            }
+        });
     }
 
     @Override
@@ -114,48 +147,25 @@ public class MainActivity extends AppCompatActivity {
         private final String API_KEY = getString(R.string.api_key);
         private final String LANGUAGE = getString(R.string.language_param);
         private final String language = getString(R.string.language);
+        private final String movieListType;
+
+        PopularMovieTask(String movieListType) {
+            super();
+            this.movieListType = movieListType;
+        }
 
         @Override
         protected Void doInBackground(Void... voids) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences
-                    (MainActivity.this);
-            String movieListType = sharedPreferences.getString(getString(R.string.movie_list_type), "popular");
-
-            if (getString(R.string.favorites).equals(movieListType)) {
-                getFavoritesFromDatabase(movieListType);
-            } else {
-                getListFromServer(movieListType);
-            }
-
+            getListFromServer();
             return null;
-        }
-
-        /**
-         * Retrieves the movie poster paths for the user's favorites from the database and loads
-         * them into the adapter view.
-         */
-        private void getFavoritesFromDatabase(String movieListType) {
-            // TODO Get and store images in the database instead of loading them every time.
-
-            if (movieListType.equals(getString(R.string.favorites))) {
-                Log.e("movieListType", "favorites");
-                List<Movie> movieList = movieRepository.getFavoritesAlreadyInBackground();
-                movieIds = new int[movieList.size()];
-                int index = 0;
-                for (Movie movie : movieList) {
-                    posters.add(movie.getPosterPath());
-                    movieIds[index++] = movie.getId();
-                }
-            }
         }
 
         /**
          * Retrieves the information from the movie list from the server and stores it in the
          * database.
          *
-         * @param movieListType - the type of movie list to retrieve.
          */
-        private void getListFromServer(String movieListType) {
+        private void getListFromServer() {
             String jsonString = null;
             InputStream inputStream = null;
             try {
@@ -219,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
                     movieIds[i] = movie.getId();
                     String posterPath = getString(R.string.base_image_url) + getString(R.string.poster_size) + movie.getPosterPath();
                     movie.setPosterPath(posterPath);
+                    // TODO store the poster in the db and use live data
                     posters.add(posterPath);
                     String backdropUrl = getString(R.string.base_image_url) + getString(R.string
                             .backdrop_size) + movie.getBackdropPath();

@@ -1,5 +1,6 @@
 package com.cellblock70.popularmovies;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -22,11 +23,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
-import com.cellblock70.popularmovies.data.CompleteMovie;
-import com.cellblock70.popularmovies.data.Movie;
+import com.cellblock70.popularmovies.data.database.CompleteMovie;
+import com.cellblock70.popularmovies.data.database.Movie;
 import com.cellblock70.popularmovies.data.MovieRepository;
-import com.cellblock70.popularmovies.data.MovieReview;
-import com.cellblock70.popularmovies.data.MovieTrailer;
+import com.cellblock70.popularmovies.data.database.MovieReview;
+import com.cellblock70.popularmovies.data.database.MovieTrailer;
 import com.google.gson.Gson;
 
 import org.json.JSONArray;
@@ -41,6 +42,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class MovieDetails extends AppCompatActivity {
 
@@ -57,6 +59,7 @@ public class MovieDetails extends AppCompatActivity {
      * @param view - the view that was clicked to toggle the favorites.
      */
     public void onFavoriteClicked(View view) {
+        // TODO this is not working with new LiveData changes
         movieRepository.updateFavorite(((ToggleButton) view).isChecked(), movieId);
     }
 
@@ -65,9 +68,6 @@ public class MovieDetails extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setupActionBar();
         setContentView(R.layout.activity_movie_details);
-        if (movieRepository == null) {
-            movieRepository = new MovieRepository(this);
-        }
         loadMovieDetailsIntoView();
         if (savedInstanceState != null) {
             Log.e(LOG_TAG, "Saved instance wasn't null");
@@ -79,13 +79,21 @@ public class MovieDetails extends AppCompatActivity {
     }
 
     private void loadMovieDetailsIntoView() {
+        movieId = getIntent().getIntExtra(MainActivity.MOVIE_ID, -1);
+        movieRepository = MovieRepository.provideRepository(this);
+        MovieDetailViewModelFactory factory = new MovieDetailViewModelFactory(movieRepository, movieId);
+        MovieDetailViewModel viewModel = factory.create(MovieDetailViewModel.class);
+        viewModel.getMovie().observe(this, completeMovie -> {
+                if (completeMovie != null && completeMovie.getMovie() != null) loadMovieIntoView(completeMovie);
+
+        });
+
+    }
+
+    private void loadMovieIntoView(CompleteMovie completeMovie) {
         final View rootView = findViewById(R.id.activity_movie_details_scrollview);
         mTrailerLinearLayout = rootView.findViewById(R.id.trailer_list_view);
         mReviewLinearLayout = rootView.findViewById(R.id.review_list_view);
-
-        movieId = getIntent().getIntExtra(MainActivity.MOVIE_ID, -1);
-
-        CompleteMovie completeMovie = movieRepository.getCompleteMovie(movieId);
         Movie movie = completeMovie.getMovie();
         if (completeMovie.getTrailerList().isEmpty() || completeMovie.getReviewList().isEmpty()) {
             new LoadTrailersAndReviewsTask().execute(movieId);
@@ -139,11 +147,9 @@ public class MovieDetails extends AppCompatActivity {
                 // todo Do I still need this or was this solving a bug that has been fixed in new android release?
                 if (position != null) {
                     Log.e(LOG_TAG, "position wasn't null " + position[0] + "  " + position[1]);
-                    rootView.post(new Runnable() {
-                        public void run() {
+                    rootView.post(() ->{
                             Log.e(LOG_TAG, "scrolling");
                             rootView.scrollTo(position[0], position[1]);
-                        }
                     });
                 }
             }
@@ -175,11 +181,9 @@ public class MovieDetails extends AppCompatActivity {
 
         if (position != null) {
             Log.e(LOG_TAG, "position wasn't null " + position[0] + "  " + position[1]);
-            scrollView.post(new Runnable() {
-                public void run() {
+            scrollView.post(() -> {
                     Log.e(LOG_TAG, "scrolling");
                     scrollView.scrollTo(position[0], position[1]);
-                }
             });
         }
     }
@@ -213,8 +217,8 @@ public class MovieDetails extends AppCompatActivity {
      */
     @NonNull
     private LinearLayout getReviewLayout(String author, String content) {
-        LinearLayout reviewLayout = (LinearLayout) getLayoutInflater().inflate(R.layout
-                .movie_review, null);
+        @SuppressLint("InflateParams") LinearLayout reviewLayout = (LinearLayout)
+                getLayoutInflater().inflate(R.layout.movie_review, null);
         reviewLayout.setId(author.hashCode() + content.hashCode());
         ((TextView) reviewLayout.findViewById(R.id.reviewer_text_view)).setText(author);
         ((TextView) reviewLayout.findViewById(R.id.review_content_text_view)).setText
@@ -237,9 +241,7 @@ public class MovieDetails extends AppCompatActivity {
         final Uri uri = Uri.parse("https://youtube.com/").buildUpon()
                 .appendPath("watch")
                 .appendQueryParameter("v", key).build();
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        button.setOnClickListener(v -> {
                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                 Log.i(LOG_TAG, uri.toString());
                 if (intent.resolveActivity(getPackageManager()) != null) {
@@ -248,7 +250,6 @@ public class MovieDetails extends AppCompatActivity {
                     Log.d(LOG_TAG, "Couldn't open trailer, no " +
                             "receiving apps installed!");
                 }
-            }
         });
         return button;
     }
@@ -256,6 +257,7 @@ public class MovieDetails extends AppCompatActivity {
     /**
      * An AsyncTask used to load trailers and reviews into the view and store them in the db.
      */
+    // TODO move this network call to MovieNetworkDataSource
     private class LoadTrailersAndReviewsTask extends AsyncTask<Integer, Void, String> {
 
         Integer movieId;
@@ -371,11 +373,9 @@ public class MovieDetails extends AppCompatActivity {
             final ScrollView scrollView = findViewById(R.id.activity_movie_details_scrollview);
             if (position != null) {
                 Log.e(LOG_TAG, "position wasn't null " + position[0] + "  " + position[1]);
-                scrollView.post(new Runnable() {
-                    public void run() {
+                scrollView.post(() -> {
                         Log.e(LOG_TAG, "scrolling");
                         scrollView.scrollTo(position[0], position[1]);
-                    }
                 });
             }
         }

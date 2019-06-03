@@ -1,4 +1,4 @@
-package com.cellblock70.popularmovies.data;
+package com.cellblock70.popularmovies.data.database;
 
 import androidx.room.Embedded;
 import androidx.room.Relation;
