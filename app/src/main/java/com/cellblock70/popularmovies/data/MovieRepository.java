@@ -16,7 +16,6 @@ import com.cellblock70.popularmovies.data.database.MovieTrailer;
 import com.cellblock70.popularmovies.data.network.MovieNetworkDataSource;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 public class MovieRepository {
     private static final String LOG_TAG = "MovieRepository";
@@ -54,7 +53,7 @@ public class MovieRepository {
         AppExecutors executors = AppExecutors.getInstance();
         MovieNetworkDataSource networkDataSource =
                 MovieNetworkDataSource.getInstance(context.getApplicationContext(), executors);
-        return MovieRepository.getInstance(database.movieDao(), networkDataSource, executors);
+        return getInstance(database.movieDao(), networkDataSource, executors);
     }
 
     public void insertMoviesAlreadyInBackground(List<Movie> movies) {
@@ -77,21 +76,31 @@ public class MovieRepository {
         return movieDao.getFavorites();
     }
 
+    public void insertMovie(Movie movie) {
+        new InsertMovieTask(movieDao).execute(movie);
+    }
+
     public boolean isFavoriteAlreadyInBackground(int movieId) {
-        LiveData<Movie> movie = movieDao.getMovie(movieId);
-        return movie.getValue() != null && movie.getValue().getFavorite();
+        Movie movie = movieDao.getMovie(movieId);
+        return movie != null && movie.getFavorite();
     }
 
     public LiveData<CompleteMovie> getCompleteMovie(Integer movieId) {
         return movieDao.getMovieWithTrailersAndReviews(movieId);
-//        try {
-//            movie = new GetCompleteMovieTask(movieDao).execute(movieId).get();
-//        } catch (ExecutionException e) {
-//            Log.e(LOG_TAG, "Failed to execute getCompleteMovie");
-//        } catch (InterruptedException e) {
-//            Log.e(LOG_TAG, "getCompleteMovie interrupted");
-//        }
-//        return movie;
+    }
+
+    private static class InsertMovieTask extends AsyncTask<Movie, Void, Void> {
+        private MovieDao movieDao;
+
+        InsertMovieTask(MovieDao movieDao) {
+            this.movieDao = movieDao;
+        }
+
+        @Override
+        protected Void doInBackground(Movie... movies) {
+            movieDao.insertAll(movies);
+            return null;
+        }
     }
 
     private static class InsertTrailersTask extends AsyncTask<MovieTrailer, Void, Void> {
@@ -119,19 +128,6 @@ public class MovieRepository {
         protected Void doInBackground(MovieReview... reviews) {
             movieDao.insertAll(reviews);
             return null;
-        }
-    }
-
-    private static class GetCompleteMovieTask extends AsyncTask<Integer, Void, LiveData<CompleteMovie>> {
-
-        private MovieDao movieDao;
-
-        GetCompleteMovieTask(MovieDao movieDao) {
-            this.movieDao = movieDao;
-        }
-        @Override
-        protected LiveData<CompleteMovie> doInBackground(Integer... movieId) {
-            return movieDao.getMovieWithTrailersAndReviews(movieId[0]);
         }
     }
 

@@ -1,4 +1,4 @@
-package com.cellblock70.popularmovies;
+package com.cellblock70.popularmovies.UI.Details;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;

@@ -1,4 +1,4 @@
-package com.cellblock70.popularmovies;
+package com.cellblock70.popularmovies.UI.MovieList;
 
 import android.app.Application;
 

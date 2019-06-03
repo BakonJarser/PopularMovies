@@ -18,6 +18,9 @@ public interface MovieDao {
     @Query("SELECT * FROM details where movie_id = (:movieId)")
     LiveData<Movie> getMovie(Integer movieId);
 
+    @Query("SELECT * from details where movie_id = (:movieId)")
+    Movie getMovie(int movieId);
+
     @Query("SELECT * FROM details where favorite = 1")
     LiveData<List<Movie>> getFavorites();
 

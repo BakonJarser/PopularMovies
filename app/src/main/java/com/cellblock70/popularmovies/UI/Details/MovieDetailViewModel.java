@@ -1,4 +1,4 @@
-package com.cellblock70.popularmovies;
+package com.cellblock70.popularmovies.UI.Details;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
@@ -18,7 +18,7 @@ public class MovieDetailViewModel extends ViewModel {
         this.movie = movieRepository.getCompleteMovie(movieId);
     }
 
-    public LiveData<CompleteMovie> getMovie() {
+    public LiveData<CompleteMovie> getMovieLiveData() {
         if (movie == null) {
             movieRepository.getCompleteMovie(movieId);
         }

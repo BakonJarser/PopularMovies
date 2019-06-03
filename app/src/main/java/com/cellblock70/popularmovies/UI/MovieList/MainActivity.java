@@ -1,4 +1,4 @@
-package com.cellblock70.popularmovies;
+package com.cellblock70.popularmovies.UI.MovieList;
 
 import android.content.Context;
 import android.content.Intent;
@@ -18,12 +18,15 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.OrientationHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.cellblock70.popularmovies.BuildConfig;
+import com.cellblock70.popularmovies.R;
+import com.cellblock70.popularmovies.SettingsActivity;
+import com.cellblock70.popularmovies.UI.Details.MovieDetails;
 import com.cellblock70.popularmovies.data.database.Movie;
 import com.cellblock70.popularmovies.data.MovieRepository;
 import com.google.gson.Gson;
@@ -45,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String POSTERS = "posters";
     public static final String MOVIE_IDS = "movieIds";
-    // This column is the primary key that uniquely identifies the movie.
     public static final String MOVIE_ID = "movie_id";
     private ImageViewAdapter mMovieAdapter;
     private ArrayList<String> posters = new ArrayList<>();
@@ -91,19 +93,14 @@ public class MainActivity extends AppCompatActivity {
     private void getFavoritesFromDatabase() {
         // TODO Get and store images in the database instead of loading them every time.
 
-        Log.e("movieListType", "favorites");
         MovieViewModel movieViewModel = new MovieViewModel(MainActivity.this.getApplication());
         LiveData<List<Movie>> favoriteData = movieViewModel.getFavorites();
-        favoriteData.observe(MainActivity.this, new Observer<List<Movie>>() {
-            @Override
-            public void onChanged(List<Movie> movies) {
-                Log.e("favorites", "onChanged");
-                movieIds = new int[movies.size()];
-                int index = 0;
-                for (Movie movie : movies) {
-                    posters.add(movie.getPosterPath());
-                    movieIds[index++] = movie.getId();
-                }
+        favoriteData.observe(MainActivity.this, movies -> {
+            movieIds = new int[movies.size()];
+            int index = 0;
+            for (Movie movie : movies) {
+                posters.add(movie.getPosterPath());
+                movieIds[index++] = movie.getId();
             }
         });
     }

@@ -1,4 +1,4 @@
-package com.cellblock70.popularmovies;
+package com.cellblock70.popularmovies.UI.Details;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -23,6 +23,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.cellblock70.popularmovies.BuildConfig;
+import com.cellblock70.popularmovies.R;
+import com.cellblock70.popularmovies.UI.MovieList.MainActivity;
 import com.cellblock70.popularmovies.data.database.CompleteMovie;
 import com.cellblock70.popularmovies.data.database.Movie;
 import com.cellblock70.popularmovies.data.MovieRepository;
@@ -52,6 +55,7 @@ public class MovieDetails extends AppCompatActivity {
     private Integer movieId;
     private int[] position = null;
     private MovieRepository movieRepository;
+    private MovieDetailViewModel viewModel;
 
     /**
      * Updates the tables in the database to reflect the users new preference.
@@ -59,7 +63,6 @@ public class MovieDetails extends AppCompatActivity {
      * @param view - the view that was clicked to toggle the favorites.
      */
     public void onFavoriteClicked(View view) {
-        // TODO this is not working with new LiveData changes
         movieRepository.updateFavorite(((ToggleButton) view).isChecked(), movieId);
     }
 
@@ -82,10 +85,10 @@ public class MovieDetails extends AppCompatActivity {
         movieId = getIntent().getIntExtra(MainActivity.MOVIE_ID, -1);
         movieRepository = MovieRepository.provideRepository(this);
         MovieDetailViewModelFactory factory = new MovieDetailViewModelFactory(movieRepository, movieId);
-        MovieDetailViewModel viewModel = factory.create(MovieDetailViewModel.class);
-        viewModel.getMovie().observe(this, completeMovie -> {
+        viewModel = factory.create(MovieDetailViewModel.class);
+        viewModel.getMovieLiveData().observe(this, completeMovie -> {
+            Log.d(LOG_TAG, "Movie Details have changed for movie " + movieId);
                 if (completeMovie != null && completeMovie.getMovie() != null) loadMovieIntoView(completeMovie);
-
         });
 
     }
@@ -96,6 +99,7 @@ public class MovieDetails extends AppCompatActivity {
         mReviewLinearLayout = rootView.findViewById(R.id.review_list_view);
         Movie movie = completeMovie.getMovie();
         if (completeMovie.getTrailerList().isEmpty() || completeMovie.getReviewList().isEmpty()) {
+            Log.d(LOG_TAG, "Trailer list or review list was empty");
             new LoadTrailersAndReviewsTask().execute(movieId);
         } else {
             populateReviewAndTrailerViews(completeMovie);
@@ -160,8 +164,8 @@ public class MovieDetails extends AppCompatActivity {
         if (movie.getTrailerList() == null || movie.getTrailerList().isEmpty()) {
             Log.e(LOG_TAG, "Failed to retrieve trailers for movie " + movieId);
         } else {
-            List<MovieTrailer> trailerList = movie.getTrailerList();
-            for (MovieTrailer movieTrailer : trailerList) {
+            mTrailerLinearLayout.removeAllViews();
+            for (MovieTrailer movieTrailer : movie.getTrailerList()) {
                 mTrailerLinearLayout.addView(getTrailerButton(movieTrailer.getLink(),
                         movieTrailer.getName()));
             }
@@ -170,6 +174,7 @@ public class MovieDetails extends AppCompatActivity {
         if (movie.getReviewList() == null || movie.getReviewList().isEmpty()) {
             Log.e(LOG_TAG, "Failed to retrieve reviews for movie " + movieId);
         } else {
+            mReviewLinearLayout.removeAllViews();
             // Load each review into the view.
             for (MovieReview review : movie.getReviewList()) {
                 mReviewLinearLayout.addView(getReviewLayout(review.getAuthor(), review.getReviewText()));
