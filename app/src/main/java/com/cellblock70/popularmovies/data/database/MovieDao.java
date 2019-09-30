@@ -24,9 +24,17 @@ public interface MovieDao {
     @Query("SELECT * FROM details where favorite = 1")
     LiveData<List<Movie>> getFavorites();
 
+    // TODO delete unused movies
+//    @Query("DELETE FROM details")
+//    void deleteAll();
+
     @Transaction
     @Query("SELECT * FROM details where movie_id = (:movieId)")
     LiveData<CompleteMovie> getMovieWithTrailersAndReviews(Integer movieId);
+
+    @Transaction
+    @Query("SELECT * FROM details where movie_id = (:movieId)")
+    CompleteMovie getCompleteMovie(Integer movieId);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(Movie...movieDetails);

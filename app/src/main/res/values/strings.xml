@@ -21,7 +21,6 @@
     // Parameters for retrieving from the json returned by the movie database.
     <string name="poster_path" translatable="false">poster_path</string>
     <string name="backdrop_path" translatable="false">backdrop_path</string>
-    <string name="results" translatable="false">results</string>
     <string name="language_param" translatable="false">language</string>
 
     // Preferences

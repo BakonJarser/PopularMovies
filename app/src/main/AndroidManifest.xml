@@ -20,7 +20,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".UI.Details.MovieDetails"
+            android:name=".UI.Details.MovieDetailsActivity"
             android:configChanges="keyboardHidden"
             android:parentActivityName=".UI.MovieList.MainActivity">
 

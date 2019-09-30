@@ -6,32 +6,33 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
+import com.cellblock70.popularmovies.data.MovieRepository;
 import com.cellblock70.popularmovies.data.database.Movie;
-import com.cellblock70.popularmovies.data.database.MovieDatabase;
 
 import java.util.List;
 
 public class MovieViewModel extends AndroidViewModel {
 
-    private MovieDatabase movieDatabase;
+    //private MovieDatabase movieDatabase;
     private LiveData<List<Movie>> allMovies;
     private LiveData<List<Movie>> favoriteMovies;
+    private MovieRepository movieRepository;
 
     public MovieViewModel(@NonNull Application application) {
         super(application);
-        movieDatabase = MovieDatabase.getDatabase(application);
+        movieRepository = MovieRepository.provideRepository(application);
     }
 
-    public LiveData<List<Movie>> getMovies() {
+    public LiveData<List<Movie>> getMovies(String movieListType) {
         if (allMovies == null) {
-            allMovies = movieDatabase.movieDao().getMovies();
+            allMovies = movieRepository.getMovies(movieListType);
         }
         return allMovies;
     }
 
     public LiveData<List<Movie>> getFavorites() {
         if (favoriteMovies == null) {
-            favoriteMovies = movieDatabase.movieDao().getFavorites();
+            favoriteMovies = movieRepository.getFavoritesAlreadyInBackground();
         }
         return favoriteMovies;
     }

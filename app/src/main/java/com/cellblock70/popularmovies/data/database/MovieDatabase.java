@@ -35,5 +35,4 @@ public abstract class MovieDatabase extends RoomDatabase {
         }
         return INSTANCE;
     }
-
 }
