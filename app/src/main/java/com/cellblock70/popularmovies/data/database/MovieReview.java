@@ -1,4 +1,4 @@
-package com.cellblock70.popularmovies.data;
+package com.cellblock70.popularmovies.data.database;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
@@ -8,25 +8,22 @@ import androidx.room.PrimaryKey;
 
 import com.google.gson.annotations.SerializedName;
 
-@Entity(tableName = "trailers",
+@Entity(tableName = "reviews",
         foreignKeys = {@ForeignKey(entity = Movie.class, parentColumns = "movie_id",
                 childColumns = "movie_id", onDelete = ForeignKey.CASCADE)},
         indices = {@Index("movie_id")})
-public class MovieTrailer {
+public class MovieReview {
 
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
     private transient int id;
 
-    @ColumnInfo(name = "name")
-    private String name;
+    @ColumnInfo(name = "review_tx")
+    @SerializedName("content")
+    private String reviewText;
 
-    @ColumnInfo(name = "link")
-    @SerializedName("key")
-    private String link;
-
-    @ColumnInfo(name = "site")
-    private String site;
+    @ColumnInfo(name = "author")
+    private String author;
 
     @ColumnInfo(name = "movie_id")
     private int movieId;
@@ -39,28 +36,20 @@ public class MovieTrailer {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getReviewText() {
+        return reviewText;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setReviewText(String reviewText) {
+        this.reviewText = reviewText;
     }
 
-    public String getLink() {
-        return link;
+    public String getAuthor() {
+        return author;
     }
 
-    public void setLink(String link) {
-        this.link = link;
-    }
-
-    public String getSite() {
-        return site;
-    }
-
-    public void setSite(String site) {
-        this.site = site;
+    public void setAuthor(String author) {
+        this.author = author;
     }
 
     public int getMovieId() {

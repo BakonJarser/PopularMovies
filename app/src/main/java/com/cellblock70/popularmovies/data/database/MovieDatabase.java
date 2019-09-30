@@ -1,4 +1,4 @@
-package com.cellblock70.popularmovies.data;
+package com.cellblock70.popularmovies.data.database;
 
 import android.content.Context;
 
@@ -10,7 +10,7 @@ import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
 @Database(entities = {Movie.class, MovieReview.class, MovieTrailer.class},
-          version = 2)
+          version = 2, exportSchema = false)
 public abstract class MovieDatabase extends RoomDatabase {
 
     public abstract MovieDao movieDao();
@@ -24,7 +24,7 @@ public abstract class MovieDatabase extends RoomDatabase {
 
     private static volatile MovieDatabase INSTANCE;
 
-    static MovieDatabase getDatabase(final Context context) {
+    public static MovieDatabase getDatabase(final Context context) {
         if (INSTANCE == null) {
             synchronized (MovieDatabase.class) {
                 if (INSTANCE == null) {
@@ -35,5 +35,4 @@ public abstract class MovieDatabase extends RoomDatabase {
         }
         return INSTANCE;
     }
-
 }

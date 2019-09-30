@@ -1,4 +1,4 @@
-package com.cellblock70.popularmovies.data;
+package com.cellblock70.popularmovies.data.database;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
@@ -126,6 +126,4 @@ public class Movie {
     public void setBackdropPath(String backdropPath) {
         this.backdropPath = backdropPath;
     }
-
-
 }

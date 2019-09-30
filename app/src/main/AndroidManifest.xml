@@ -11,7 +11,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".UI.MovieList.MainActivity"
             android:configChanges="keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -20,21 +20,21 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MovieDetails"
+            android:name=".UI.Details.MovieDetailsActivity"
             android:configChanges="keyboardHidden"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".UI.MovieList.MainActivity">
 
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.cellblock70.popularmovies.MainActivity"/>
+                android:value="com.cellblock70.popularmovies.UI.MovieList.MainActivity"/>
         </activity>
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".UI.MovieList.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.cellblock70.popularmovies.MainActivity"/>
+                android:value="com.cellblock70.popularmovies.UI.MovieList.MainActivity"/>
         </activity>
     </application>
 
