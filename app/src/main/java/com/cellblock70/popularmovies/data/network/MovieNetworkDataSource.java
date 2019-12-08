@@ -9,7 +9,6 @@ import androidx.lifecycle.MutableLiveData;
 import com.cellblock70.popularmovies.AppExecutors;
 import com.cellblock70.popularmovies.BuildConfig;
 import com.cellblock70.popularmovies.R;
-import com.cellblock70.popularmovies.data.database.CompleteMovie;
 import com.cellblock70.popularmovies.data.database.Movie;
 
 import com.cellblock70.popularmovies.data.database.MovieReview;
@@ -54,7 +53,7 @@ public class MovieNetworkDataSource {
         return instance;
     }
 
-    public void fetchTrailersAndReviews(Integer movieId, MutableLiveData<CompleteMovie> movie) {
+    public void fetchTrailersAndReviews(Integer movieId, MutableLiveData<List<MovieTrailer>> trailersLD, MutableLiveData<List<MovieReview>> reviewsLD) {
         StringBuilder buffer = new StringBuilder();
         appExecutors.networkIO().execute(() -> {
             InputStream input = null;
@@ -107,18 +106,16 @@ public class MovieNetworkDataSource {
                     Gson gson = new Gson();
                     MovieTrailer movieTrailer = gson.fromJson(trailerResults.get(i).toString(), MovieTrailer.class);
                     movieTrailer.setMovieId(movieId);
-                    movieTrailers.add(movieTrailer);
                     // Make sure this is a youtube video.
                     if (!movieTrailer.getSite().equalsIgnoreCase("youtube")) {
                         Log.i(LOG_TAG, movieTrailer.getName() + " is not a youtube video.");
                         continue;
                     }
+                    movieTrailers.add(movieTrailer);
 
                 }
 
-                if (movie.getValue() != null) {
-                    movie.getValue().setTrailerList(movieTrailers);
-                }
+                trailersLD.postValue(movieTrailers);
 
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -136,13 +133,12 @@ public class MovieNetworkDataSource {
                     review.setMovieId(movieId);
                     reviewList.add(review);
                 }
-                if (movie.getValue() != null) {
-                    movie.getValue().setReviewList(reviewList);
-                }
+
+                reviewsLD.postValue(reviewList);
+
             } catch (JSONException e) {
-                e.printStackTrace();
+                Log.e(LOG_TAG, e.getMessage());
             }
-            movie.postValue(movie.getValue());
         });
     }
 
@@ -177,7 +173,7 @@ public class MovieNetworkDataSource {
                 if (inputStream == null) {
                     // Nothing to do.
                     Log.e(LOG_TAG, "Null input stream");
-                    //return;
+                    return;
                 }
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
@@ -205,7 +201,7 @@ public class MovieNetworkDataSource {
             }
             List<Movie> movieList = new ArrayList<>();
             try {
-                if (jsonString == null || jsonString.toString().isEmpty()) {
+                if (jsonString.toString().isEmpty()) {
                     throw new JSONException("null or empty json string");
                 }
                 JSONObject object = new JSONObject(jsonString.toString());
@@ -219,9 +215,6 @@ public class MovieNetworkDataSource {
                     // TODO store the poster in the db and use live data
                     String backdropUrl = "https://image.tmdb.org/t/p/w780/" + movie.getBackdropPath();
                     movie.setBackdropPath(backdropUrl);
-                    // todo figure out if this is already a favorite
-                //    boolean fav = isFavorite(movie.getId());
-                //    movie.setFavorite(fav);
                     movieList.add(movie);
                 }
 

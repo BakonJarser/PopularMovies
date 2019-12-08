@@ -13,9 +13,6 @@ public class Movie {
     @ColumnInfo(name = "movie_id")
     private int id;
 
-    @ColumnInfo(name = "favorite")
-    private boolean isFavorite;
-
     @ColumnInfo(name = "title")
     private String title;
 
@@ -49,10 +46,6 @@ public class Movie {
 
     public int getId() {
         return id;
-    }
-
-    public boolean getFavorite() {
-        return isFavorite;
     }
 
     public String getTitle() {
@@ -89,10 +82,6 @@ public class Movie {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public void setFavorite(boolean isFavorite) {
-        this.isFavorite = isFavorite;
     }
 
     public void setTitle(String title) {

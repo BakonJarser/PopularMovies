@@ -30,10 +30,11 @@ public class MovieViewModel extends AndroidViewModel {
         return allMovies;
     }
 
-    public LiveData<List<Movie>> getFavorites() {
-        if (favoriteMovies == null) {
-            favoriteMovies = movieRepository.getFavoritesAlreadyInBackground();
-        }
-        return favoriteMovies;
-    }
+    // TODO implement favorites menu
+//    public LiveData<List<Movie>> getFavorites() {
+//        if (favoriteMovies == null) {
+//            favoriteMovies = movieRepository.getFavoritesAlreadyInBackground();
+//        }
+//        return favoriteMovies;
+//    }
 }

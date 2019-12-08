@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-@Database(entities = {Movie.class, MovieReview.class, MovieTrailer.class},
+@Database(entities = {Movie.class, MovieReview.class, MovieTrailer.class, Favorite.class},
           version = 2, exportSchema = false)
 public abstract class MovieDatabase extends RoomDatabase {
 

@@ -39,7 +39,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
     private LinearLayout mReviewLinearLayout;
     private Integer movieId;
     private ActivityMovieDetailsBinding mDetailBinding;
-
+    private MovieDetailViewModel viewModel;
 
     /**
      * Updates the tables in the database to reflect the users new preference.
@@ -48,7 +48,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
      */
     public void onFavoriteClicked(View view) {
         // TODO set favorite when button is clicked
-        //movieRepository.updateFavorite(((ToggleButton) view).isChecked(), movieId);
+        viewModel.setIsFavorite(((ToggleButton) view).isChecked());
     }
 
     @Override
@@ -56,9 +56,9 @@ public class MovieDetailsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         movieId = getIntent().getIntExtra(MainActivity.MOVIE_ID, -1);
         mDetailBinding = DataBindingUtil.setContentView(this, R.layout.activity_movie_details);
-        MovieDetailViewModel viewModel = new MovieDetailViewModel(this.getApplication(), movieId);
+        viewModel = new MovieDetailViewModel(this.getApplication(), movieId);
         viewModel.getMovieLiveData().observe(this, movie -> {
-            if (movie != null && movie.getMovie() != null) { loadMovieIntoView(movie); }
+            if (movie != null && movie.getMovie() != null) { loadMovieIntoView(movie, viewModel.getIsFavorite()); }
         });
         setupActionBar();
         if (savedInstanceState != null) {
@@ -71,7 +71,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         }
     }
 
-    private void loadMovieIntoView(CompleteMovie completeMovie) {
+    private void loadMovieIntoView(CompleteMovie completeMovie, boolean isFavorite) {
         mTrailerLinearLayout = mDetailBinding.trailerListView;
         mReviewLinearLayout = mDetailBinding.reviewListView;
         Movie movie = completeMovie.getMovie();
@@ -109,7 +109,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
 
                 });
                 ToggleButton favoriteButton = mDetailBinding.favoriteButton;
-                favoriteButton.setChecked(movie.getFavorite());
+                favoriteButton.setChecked(isFavorite);
                 mDetailBinding.originalTitleView.setText(movie.getOriginalTitle());
                 mDetailBinding.titleView.setText(movie.getTitle());
                 mDetailBinding.synopsis.setText(movie.getSynopsis());
@@ -146,7 +146,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         ScrollView scrollView = mDetailBinding.activityMovieDetailsScrollview;
         Log.e(LOG_TAG, "Y: " + scrollView.getScrollY());

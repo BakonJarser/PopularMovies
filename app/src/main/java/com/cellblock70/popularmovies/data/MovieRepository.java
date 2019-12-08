@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.cellblock70.popularmovies.AppExecutors;
 import com.cellblock70.popularmovies.data.database.CompleteMovie;
+import com.cellblock70.popularmovies.data.database.Favorite;
 import com.cellblock70.popularmovies.data.database.Movie;
 import com.cellblock70.popularmovies.data.database.MovieDao;
 import com.cellblock70.popularmovies.data.database.MovieDatabase;
@@ -23,9 +24,10 @@ public class MovieRepository {
     private static final String LOG_TAG = "MovieRepository";
     private final MovieDao movieDao;
     private final AppExecutors executors;
-    private boolean initialized = false;
     private static MovieRepository instance;
     private final MovieNetworkDataSource movieDataSource;
+    private List<Favorite> favorites;
+    private MutableLiveData<List<Favorite>> favoriteLD;
 
     private MovieRepository(MovieDao movieDao, MovieNetworkDataSource dataSource,
                             AppExecutors executors) {
@@ -33,8 +35,17 @@ public class MovieRepository {
         this.movieDataSource = dataSource;
         this.executors = executors;
 
-        // TODO load the movies. Do I need to pass in the current movie list type?
+        favoriteLD = new MutableLiveData<>();
+        favoriteLD.observeForever(favorites1 ->  favorites = favorites1);
+        getFavorites();
 
+    }
+
+    private void getFavorites() {
+        executors.diskIO().execute(() -> {
+            favoriteLD.postValue(movieDao.getFavorites().getValue());
+           // if (fav)
+        });
     }
 
     private static MovieRepository getInstance(MovieDao movieDao, MovieNetworkDataSource dataSource,
@@ -56,13 +67,14 @@ public class MovieRepository {
         movieDataSource.fetchMovies(movieListType, movies);
 
         movies.observeForever(movies1 -> {
-            setIsFavoriteInList(movies1);
-            insertMovies(movies1);
-//            for (Movie movie : movies1) {
-//                MutableLiveData<List<MovieTrailer>> trailers = new MutableLiveData<>();
-//                // TODO possibly fetch the trailers and reviews right away
-//                movieDataSource.fetchTrailers();
-//            }
+            executors.diskIO().execute(() -> movieDao.insertAll(movies1.toArray(new Movie[0])));
+            for (Movie movie : movies1) {
+                MutableLiveData<List<MovieTrailer>> trailer = new MutableLiveData<>();
+                MutableLiveData<List<MovieReview>> review = new MutableLiveData<>();
+                movieDataSource.fetchTrailersAndReviews(movie.getId(), trailer, review);
+                trailer.observeForever(this::insertTrailers);
+                review.observeForever(this::insertReviews);
+           }
         });
 
         return movies;
@@ -76,37 +88,45 @@ public class MovieRepository {
         return getInstance(database.movieDao(), networkDataSource, executors);
     }
 
-    public void insertTrailers(List<MovieTrailer> trailers) {
+    private void insertTrailers(List<MovieTrailer> trailers) {
         new InsertTrailersTask(movieDao).execute(trailers.toArray(new MovieTrailer[0]));
     }
 
-    public void insertReviews(List<MovieReview> reviews) {
+    private void insertReviews(List<MovieReview> reviews) {
         new InsertReviewsTask(movieDao).execute(reviews.toArray(new MovieReview[0]));
     }
 
-    public void updateFavorite(boolean isFavorite, int movieId) {
-        new UpdateFavoriteTask(movieDao, isFavorite, movieId).execute();
-    }
 
-    public LiveData<List<Movie>> getFavoritesAlreadyInBackground() {
-        return movieDao.getFavorites();
-    }
-
-    private void insertMovies(List<Movie> movies) {
-        new InsertMoviesTask(movieDao).execute(movies.toArray(new Movie[0]));
-    }
-
-    public boolean isFavorite(int movieId) {
-        Movie movie = movieDao.getMovie(movieId);
-        return movie != null && movie.getFavorite();
-    }
-
-    public void setIsFavoriteInList(List<Movie> movies) {
-        new SetFavoriteStatusOnMoviesTask(movieDao).execute(movies.toArray(new Movie[0]));
-    }
-
-    public void setIsFavoriteInDb(Movie movieId) {
+    public void setIsFavoriteInDb(int movieId) {
         // TODO add ability to set movie as favorite
+        Log.e(LOG_TAG, "Inserting movie into favorites: " + movieId);
+        executors.diskIO().execute(() -> {
+            movieDao.insert(new Favorite(movieId));
+            if (favorites == null) {
+                getFavorites();
+                //favorites = movieDao.getFavorites();
+                Log.e(LOG_TAG, "Favorites is null ");
+            } else {
+                Log.e(LOG_TAG, "Favorites wasn't null: " + favorites.size());
+            }
+        });
+    }
+
+    public boolean getIsFavorite(int movieId) {
+        if (favorites != null) {
+            for (Favorite fav : favorites) {
+                if (fav.getMovieId() == movieId) {
+                    return true;
+                }
+            }
+        } else {
+            Log.e(LOG_TAG, "It's still null");
+        }
+        return false;
+    }
+
+    public void setNotFavorite(int movieId) {
+        executors.diskIO().execute(() -> movieDao.delete(new Favorite(movieId)));
     }
 
     public LiveData<CompleteMovie> getCompleteMovie(Integer movieId) {
@@ -114,42 +134,13 @@ public class MovieRepository {
         CompleteMovie completeMovie = null;
         try {
             completeMovie = new GetCompleteMovie(movieDao).execute(movieId).get();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (ExecutionException | InterruptedException e) {
+            Log.e(LOG_TAG, e.getMessage());
         }
 
-        completeMovieData.observeForever(movie -> {
-
-            if(movie != null && (movie.getTrailerList().isEmpty() || movie.getReviewList().isEmpty())) {
-                // TODO make sure this doesn't loop
-                movieDataSource.fetchTrailersAndReviews(movieId, completeMovieData);
-            }
-            if (movie != null && movie.getReviewList() != null && !movie.getReviewList().isEmpty()) {
-                new InsertReviewsTask(movieDao).execute(movie.getReviewList().toArray(new MovieReview[0]));
-            }
-            if (movie != null && movie.getTrailerList() != null && !movie.getTrailerList().isEmpty()) {
-                new InsertTrailersTask(movieDao).execute(movie.getTrailerList().toArray(new MovieTrailer[0]));
-            }
-        });
         completeMovieData.postValue(completeMovie);
 
         return completeMovieData;
-    }
-
-    private static class InsertMoviesTask extends AsyncTask<Movie, Void, Void> {
-        private MovieDao movieDao;
-
-        InsertMoviesTask(MovieDao movieDao) {
-            this.movieDao = movieDao;
-        }
-
-        @Override
-        protected Void doInBackground(Movie... movies) {
-            movieDao.insertAll(movies);
-            return null;
-        }
     }
 
     private static class InsertTrailersTask extends AsyncTask<MovieTrailer, Void, Void> {
@@ -180,52 +171,11 @@ public class MovieRepository {
         }
     }
 
-    private static class UpdateFavoriteTask extends AsyncTask<Void, Void, Void> {
-
-        private MovieDao movieDao;
-        private boolean isFavorite;
-        private int movieId;
-
-        UpdateFavoriteTask(MovieDao movieDao, boolean isFavorite, int movieId) {
-
-            this.movieDao = movieDao;
-            this.isFavorite = isFavorite;
-            this.movieId = movieId;
-        }
-        @Override
-        protected Void doInBackground(Void... voids) {
-            movieDao.updateFavorite(isFavorite, movieId);
-            return null;
-        }
-    }
-
-    private static class SetFavoriteStatusOnMoviesTask extends AsyncTask<Movie, Void, Void> {
-
-        private MovieDao movieDao;
-
-        public SetFavoriteStatusOnMoviesTask(MovieDao movieDao) {
-            this.movieDao = movieDao;
-        }
-
-        @Override
-        protected Void doInBackground(Movie... movies) {
-
-            for (Movie movie : movies) {
-                Movie dbMovie = movieDao.getMovie(movie.getId());
-
-                if (dbMovie != null && dbMovie.getFavorite()) {
-                    movie.setFavorite(true);
-                }
-            }
-            return null;
-        }
-    }
-
     private static class GetCompleteMovie extends AsyncTask<Integer, Void, CompleteMovie> {
 
         private MovieDao movieDao;
 
-        public GetCompleteMovie(MovieDao movieDao) {
+        private GetCompleteMovie(MovieDao movieDao) {
             this.movieDao = movieDao;
         }
 

@@ -83,22 +83,22 @@ public class MainActivity extends AppCompatActivity {
      */
     private void getFavoritesFromDatabase() {
         // TODO Get and store images in the database instead of loading them every time.
+        // TODO get favorites from the db
 
-
-        LiveData<List<Movie>> favoriteData = movieViewModel.getFavorites();
-        favoriteData.observe(MainActivity.this, movies -> {
-            movieIds = new int[movies.size()];
-            int index = 0;
-            for (Movie movie : movies) {
-                posters.add(movie.getPosterPath());
-                movieIds[index++] = movie.getId();
-            }
-            mMovieAdapter.notifyDataSetChanged();
-        });
+//        LiveData<List<Movie>> favoriteData = movieViewModel.getFavorites();
+//        favoriteData.observe(MainActivity.this, movies -> {
+//            movieIds = new int[movies.size()];
+//            int index = 0;
+//            for (Movie movie : movies) {
+//                posters.add(movie.getPosterPath());
+//                movieIds[index++] = movie.getId();
+//            }
+//            mMovieAdapter.notifyDataSetChanged();
+//        });
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putIntArray(MOVIE_IDS, movieIds);
         outState.putStringArrayList(POSTERS, posters);

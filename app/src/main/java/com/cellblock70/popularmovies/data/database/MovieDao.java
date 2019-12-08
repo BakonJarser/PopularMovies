@@ -2,6 +2,7 @@ package com.cellblock70.popularmovies.data.database;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
@@ -12,17 +13,12 @@ import java.util.List;
 @Dao
 public interface MovieDao {
 
-    @Query("SELECT * FROM details")
-    LiveData<List<Movie>> getMovies();
-
-    @Query("SELECT * FROM details where movie_id = (:movieId)")
-    LiveData<Movie> getMovie(Integer movieId);
-
-    @Query("SELECT * from details where movie_id = (:movieId)")
-    Movie getMovie(int movieId);
-
-    @Query("SELECT * FROM details where favorite = 1")
-    LiveData<List<Movie>> getFavorites();
+    @Query("SELECT * FROM favorite")
+    LiveData<List<Favorite>> getFavorites();
+    @Delete
+    void delete(Favorite favorite);
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insert(Favorite favorite);
 
     // TODO delete unused movies
 //    @Query("DELETE FROM details")
@@ -44,8 +40,4 @@ public interface MovieDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(MovieReview...reviews);
-
-    @Query("update details set favorite = :favorite where movie_id = :movieId")
-    void updateFavorite(boolean favorite, int movieId);
-
 }
