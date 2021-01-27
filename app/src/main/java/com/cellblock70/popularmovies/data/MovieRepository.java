@@ -36,15 +36,20 @@ public class MovieRepository {
         this.executors = executors;
 
         favoriteLD = new MutableLiveData<>();
-        favoriteLD.observeForever(favorites1 ->  favorites = favorites1);
         getFavorites();
+        favoriteLD.observeForever(
+                favorites1 ->
+                {
+            //favorites = favorites1;
+            Log.e("asdfasdf", "Is favorites null? " + (favorites == null ? "yes" : "no"));
+        });
 
     }
 
     private void getFavorites() {
         executors.diskIO().execute(() -> {
             favoriteLD.postValue(movieDao.getFavorites().getValue());
-           // if (fav)
+            favorites = movieDao.getFavorites().getValue();
         });
     }
 
@@ -117,6 +122,8 @@ public class MovieRepository {
             for (Favorite fav : favorites) {
                 if (fav.getMovieId() == movieId) {
                     return true;
+                } else {
+                    Log.e("Not the favorite", String.format("expected %d got %d", movieId, fav.getMovieId()));
                 }
             }
         } else {

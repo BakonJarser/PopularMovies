@@ -58,7 +58,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         mDetailBinding = DataBindingUtil.setContentView(this, R.layout.activity_movie_details);
         viewModel = new MovieDetailViewModel(this.getApplication(), movieId);
         viewModel.getMovieLiveData().observe(this, movie -> {
-            if (movie != null && movie.getMovie() != null) { loadMovieIntoView(movie, viewModel.getIsFavorite()); }
+            if (movie != null && movie.getMovie() != null) { loadMovieIntoView(movie); }
         });
         setupActionBar();
         if (savedInstanceState != null) {
@@ -71,10 +71,11 @@ public class MovieDetailsActivity extends AppCompatActivity {
         }
     }
 
-    private void loadMovieIntoView(CompleteMovie completeMovie, boolean isFavorite) {
+    private void loadMovieIntoView(CompleteMovie completeMovie) {
         mTrailerLinearLayout = mDetailBinding.trailerListView;
         mReviewLinearLayout = mDetailBinding.reviewListView;
         Movie movie = completeMovie.getMovie();
+        boolean isFavorite = completeMovie.getIsFavorite();
         populateReviewAndTrailerViews(completeMovie);
 
         if (movie == null) {

@@ -16,6 +16,9 @@ public class CompleteMovie {
     @Relation(parentColumn = "movie_id", entityColumn = "movie_id", entity = MovieTrailer.class)
     private List<MovieTrailer> trailerList;
 
+    @Relation(parentColumn = "movie_id", entityColumn = "movie_id", entity = Favorite.class)
+    private List<Favorite> favoriteList;
+
     public Movie getMovie() {
         return movie;
     }
@@ -27,6 +30,8 @@ public class CompleteMovie {
     public List<MovieReview> getReviewList() {
         return reviewList;
     }
+
+    public boolean getIsFavorite() { return !favoriteList.isEmpty(); }
 
     public void setReviewList(List<MovieReview> reviewList) {
         this.reviewList = reviewList;
@@ -40,4 +45,5 @@ public class CompleteMovie {
         this.trailerList = trailerList;
     }
 
+    public void setFavoriteList(List<Favorite> favoriteList) { this.favoriteList = favoriteList; }
 }
