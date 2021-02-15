@@ -103,18 +103,8 @@ public class MovieRepository {
 
 
     public void setIsFavoriteInDb(int movieId) {
-        // TODO add ability to set movie as favorite
-        Log.e(LOG_TAG, "Inserting movie into favorites: " + movieId);
-        executors.diskIO().execute(() -> {
-            movieDao.insert(new Favorite(movieId));
-            if (favorites == null) {
-                getFavorites();
-                //favorites = movieDao.getFavorites();
-                Log.e(LOG_TAG, "Favorites is null ");
-            } else {
-                Log.e(LOG_TAG, "Favorites wasn't null: " + favorites.size());
-            }
-        });
+        Log.d(LOG_TAG, "Inserting movie into favorites: " + movieId);
+        executors.diskIO().execute(() ->  movieDao.insert(new Favorite(movieId)));
     }
 
     public boolean getIsFavorite(int movieId) {
@@ -134,6 +124,10 @@ public class MovieRepository {
 
     public void setNotFavorite(int movieId) {
         executors.diskIO().execute(() -> movieDao.delete(new Favorite(movieId)));
+    }
+
+    public void deleteAllExceptFavorites() {
+        executors.diskIO().execute(movieDao::deleteAllExceptFavorites);
     }
 
     public LiveData<CompleteMovie> getCompleteMovie(Integer movieId) {

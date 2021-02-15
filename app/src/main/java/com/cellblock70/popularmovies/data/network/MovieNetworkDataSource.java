@@ -34,7 +34,7 @@ public class MovieNetworkDataSource {
 
     private static MovieNetworkDataSource instance;
     private final Context context;
-    private AppExecutors appExecutors;
+    private final AppExecutors appExecutors;
     private static final String TMDB_API_KEY = BuildConfig.TMDB_MAP_API_KEY;
 
     private MovieNetworkDataSource(Context context, AppExecutors executors) {

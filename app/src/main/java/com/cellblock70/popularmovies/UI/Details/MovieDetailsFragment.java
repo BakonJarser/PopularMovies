@@ -1,6 +1,7 @@
 package com.cellblock70.popularmovies.UI.Details;
 
 import android.annotation.SuppressLint;
+import android.app.ActionBar;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -16,30 +17,37 @@ import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
+import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.cellblock70.popularmovies.R;
-import com.cellblock70.popularmovies.UI.MovieList.MainActivity;
+import com.cellblock70.popularmovies.UI.MovieList.MovieListFragment;
 import com.cellblock70.popularmovies.data.database.CompleteMovie;
 import com.cellblock70.popularmovies.data.database.Movie;
 import com.cellblock70.popularmovies.data.database.MovieReview;
 import com.cellblock70.popularmovies.data.database.MovieTrailer;
-import com.cellblock70.popularmovies.databinding.ActivityMovieDetailsBinding;
+import com.cellblock70.popularmovies.databinding.FragmentMovieDetailsBinding;
 
 
-public class MovieDetailsActivity extends AppCompatActivity {
+public class MovieDetailsFragment extends Fragment {
 
-    private static final String LOG_TAG = MovieDetailsActivity.class.getSimpleName();
+    private static final String LOG_TAG = MovieDetailsFragment.class.getSimpleName();
     private LinearLayout mTrailerLinearLayout;
     private LinearLayout mReviewLinearLayout;
     private Integer movieId;
-    private ActivityMovieDetailsBinding mDetailBinding;
+    private FragmentMovieDetailsBinding mDetailBinding;
     private MovieDetailViewModel viewModel;
+
+    public MovieDetailsFragment() {
+
+    }
+
+    public void setMovieId(int movieId) {
+        this.movieId = movieId;
+    }
 
     /**
      * Updates the tables in the database to reflect the users new preference.
@@ -47,20 +55,21 @@ public class MovieDetailsActivity extends AppCompatActivity {
      * @param view - the view that was clicked to toggle the favorites.
      */
     public void onFavoriteClicked(View view) {
-        // TODO set favorite when button is clicked
         viewModel.setIsFavorite(((ToggleButton) view).isChecked());
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        movieId = getIntent().getIntExtra(MainActivity.MOVIE_ID, -1);
-        mDetailBinding = DataBindingUtil.setContentView(this, R.layout.activity_movie_details);
-        viewModel = new MovieDetailViewModel(this.getApplication(), movieId);
+        if (savedInstanceState != null) {
+            movieId = savedInstanceState.getInt(MovieListFragment.MOVIE_ID, -1);
+        }
+        mDetailBinding = DataBindingUtil.setContentView(getActivity(), R.layout.fragment_movie_details);
+        viewModel = new MovieDetailViewModel(getActivity().getApplication(), movieId);
         viewModel.getMovieLiveData().observe(this, movie -> {
             if (movie != null && movie.getMovie() != null) { loadMovieIntoView(movie); }
         });
-        setupActionBar();
+//        setupActionBar();
         if (savedInstanceState != null) {
             Log.e(LOG_TAG, "Saved instance wasn't null");
 
@@ -86,7 +95,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
             try {
                 final String backdropUrl;
                 DisplayMetrics metrics = new DisplayMetrics();
-                getWindowManager().getDefaultDisplay().getMetrics(metrics);
+                getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
                 // If in landscape then load the movie backdrop, else load the movie poster.
                 if (metrics.widthPixels > metrics.heightPixels) {
@@ -153,18 +162,19 @@ public class MovieDetailsActivity extends AppCompatActivity {
         Log.e(LOG_TAG, "Y: " + scrollView.getScrollY());
         outState.putIntArray("ARTICLE_SCROLL_POSITION",
                 new int[]{scrollView.getScrollX(), scrollView.getScrollY()});
+        outState.putInt(MovieListFragment.MOVIE_ID, movieId);
     }
 
-    /**
-     * Set up the {@link android.app.ActionBar}, if the API is available.
-     */
-    private void setupActionBar() {
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            // Show the Up button in the action bar.
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
-    }
+//    /**
+//     * Set up the {@link android.app.ActionBar}, if the API is available.
+//     */
+//    private void setupActionBar() {
+//        ActionBar actionBar = getActivity().getActionBar();
+//        if (actionBar != null) {
+//            // Show the Up button in the action bar.
+//            actionBar.setDisplayHomeAsUpEnabled(true);
+//        }
+//    }
 
     /**
      * Loads the review into a linear layout.
@@ -202,12 +212,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         button.setOnClickListener(v -> {
                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                 Log.i(LOG_TAG, uri.toString());
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(intent);
-                } else {
-                    Log.d(LOG_TAG, "Couldn't open trailer, no " +
-                            "receiving apps installed!");
-                }
+                getActivity().startActivity(intent);
         });
         return button;
     }

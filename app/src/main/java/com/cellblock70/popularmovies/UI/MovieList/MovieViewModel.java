@@ -24,10 +24,21 @@ public class MovieViewModel extends AndroidViewModel {
     }
 
     public LiveData<List<Movie>> getMovies(String movieListType) {
-        if (allMovies == null) {
+        //if (allMovies == null) {
             allMovies = movieRepository.getMovies(movieListType);
-        }
+       // }
         return allMovies;
+    }
+
+    public void reloadMovies(String movieListType) {
+        deleteMovies();
+        getMovies(movieListType);
+    }
+
+    public void deleteMovies() {
+        movieRepository.deleteAllExceptFavorites();
+        allMovies.getValue().clear();
+
     }
 
     // TODO implement favorites menu

@@ -22,8 +22,8 @@ public interface MovieDao {
     void insert(Favorite favorite);
 
     // TODO delete unused movies
-//    @Query("DELETE FROM details")
-//    void deleteAll();
+    @Query("DELETE FROM details WHERE movie_id NOT IN (SELECT movie_id FROM favorite)")
+    void deleteAllExceptFavorites();
 
     @Transaction
     @Query("SELECT * FROM details where movie_id = (:movieId)")

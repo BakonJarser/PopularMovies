@@ -10,6 +10,6 @@ public class MovieGridItem extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_movie_grid_item);
+        setContentView(R.layout.movie_grid_item);
     }
 }

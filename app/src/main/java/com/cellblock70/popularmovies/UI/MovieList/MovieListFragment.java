@@ -4,76 +4,104 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.OrientationHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.cellblock70.popularmovies.R;
-import com.cellblock70.popularmovies.SettingsActivity;
-import com.cellblock70.popularmovies.UI.Details.MovieDetailsActivity;
+import com.cellblock70.popularmovies.UI.Details.MovieDetailsFragment;
+import com.cellblock70.popularmovies.UI.MainActivity;
 import com.cellblock70.popularmovies.data.database.Movie;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MovieListFragment extends Fragment {
 
     public static final String POSTERS = "posters";
     public static final String MOVIE_IDS = "movieIds";
     public static final String MOVIE_ID = "movie_id";
+    public static final String LOG_TAG = MovieListFragment.class.getCanonicalName();
     private ImageViewAdapter mMovieAdapter;
     private ArrayList<String> posters = new ArrayList<>();
     private int[] movieIds;
     private MovieViewModel movieViewModel;
+    SharedPreferences mSharedPreferences;
+    String movieListType = "popular";
+
+    public MovieListFragment() {
+
+    }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onResume() {
+        super.onResume();
+        Log.e(LOG_TAG, "onResueme");
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        Log.e(LOG_TAG, "oncreateview");
+
+        return inflater.inflate(R.layout.fragment_movie_list, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.fragment_movie_list);
-        movieViewModel = new MovieViewModel(MainActivity.this.getApplication());
-        RecyclerView movieGrid = findViewById(R.id.movie_grid);
+        Log.e("MovieListFragment", "onViewCreated");
+        movieViewModel = new ViewModelProvider(requireActivity()).get(MovieViewModel.class);
+        RecyclerView movieGrid = view.getRootView().findViewById(R.id.movie_grid);
         int columns = getResources().getConfiguration().orientation == OrientationHelper
                 .VERTICAL ? 2 : 4;
-        GridLayoutManager layoutManager = new GridLayoutManager(this, columns,
+        GridLayoutManager layoutManager = new GridLayoutManager(getContext(), columns,
                 RecyclerView.VERTICAL, false);
         movieGrid.setLayoutManager(layoutManager);
         movieGrid.setHasFixedSize(true);
-        mMovieAdapter = new ImageViewAdapter(this);
+        mMovieAdapter = new ImageViewAdapter(getContext());
         movieGrid.setAdapter(mMovieAdapter);
+
+        Log.e(LOG_TAG, "ON CREATE");
 
         if (savedInstanceState != null) {
             posters = savedInstanceState.getStringArrayList(POSTERS);
             movieIds = savedInstanceState.getIntArray(MOVIE_IDS);
         } else {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences
-                    (MainActivity.this);
-            String movieListType = sharedPreferences.getString(getString(R.string.movie_list_type), "popular");
-            if (getString(R.string.favorites).equals(movieListType)) {
-                getFavoritesFromDatabase();
-            } else {
-                LiveData<List<Movie>> movieData = movieViewModel.getMovies(movieListType);
-                movieData.observe(MainActivity.this, movies -> {
-                    movieIds = new int[movies.size()];
-                    int index = 0;
-                    for (Movie movie : movies) {
-                        posters.add(movie.getPosterPath());
-                        movieIds[index++] = movie.getId();
-                    }
-                    mMovieAdapter.notifyDataSetChanged();
-                });
-            }
+            mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+//            mSharedPreferences.registerOnSharedPreferenceChangeListener(getContext());
+            loadMovieList();
+        }
+    }
+
+    private void loadMovieList() {
+        movieListType = mSharedPreferences.getString(getString(R.string.movie_list_type), "popular");
+        if (getString(R.string.favorites).equals(movieListType)) {
+            getFavoritesFromDatabase();
+        } else {
+            LiveData<List<Movie>> movieData = movieViewModel.getMovies(movieListType);
+            movieData.observe(getViewLifecycleOwner(), movies -> {
+                movieIds = new int[movies.size()];
+                int index = 0;
+                for (Movie movie : movies) {
+                    posters.add(movie.getPosterPath());
+                    movieIds[index++] = movie.getId();
+                }
+                mMovieAdapter.notifyDataSetChanged();
+            });
         }
     }
 
@@ -104,30 +132,6 @@ public class MainActivity extends AppCompatActivity {
         outState.putStringArrayList(POSTERS, posters);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            Intent settingsActivity = new Intent(this, SettingsActivity.class);
-            startActivity(settingsActivity);
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
     /**
      * An adapter for loading an image into an ImageView.
      */
@@ -142,8 +146,8 @@ public class MainActivity extends AppCompatActivity {
         @NonNull
         @Override
         public PosterViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(MainActivity.this).inflate(R.layout
-                    .activity_movie_grid_item, parent, false);
+            View view = LayoutInflater.from(getContext()).inflate(R.layout
+                    .movie_grid_item, parent, false);
             view.setFocusable(true);
             return new PosterViewHolder(view);
         }
@@ -174,10 +178,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-                Intent downloadIntent = new Intent(MainActivity.this,
-                        MovieDetailsActivity.class).putExtra(MOVIE_ID,
-                        movieIds[getAdapterPosition()]);
-                startActivity(downloadIntent);
+                ((MainActivity) getActivity()).showMovieDetails(movieIds[getAdapterPosition()]);
             }
         }
     }
