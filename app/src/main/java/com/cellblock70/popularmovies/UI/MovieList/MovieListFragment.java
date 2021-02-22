@@ -1,10 +1,8 @@
 package com.cellblock70.popularmovies.UI.MovieList;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +20,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.cellblock70.popularmovies.R;
-import com.cellblock70.popularmovies.UI.Details.MovieDetailsFragment;
 import com.cellblock70.popularmovies.UI.MainActivity;
 import com.cellblock70.popularmovies.data.database.Movie;
 
@@ -34,7 +31,6 @@ public class MovieListFragment extends Fragment {
     public static final String POSTERS = "posters";
     public static final String MOVIE_IDS = "movieIds";
     public static final String MOVIE_ID = "movie_id";
-    public static final String LOG_TAG = MovieListFragment.class.getCanonicalName();
     private ImageViewAdapter mMovieAdapter;
     private ArrayList<String> posters = new ArrayList<>();
     private int[] movieIds;
@@ -46,16 +42,9 @@ public class MovieListFragment extends Fragment {
 
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.e(LOG_TAG, "onResueme");
-    }
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        Log.e(LOG_TAG, "oncreateview");
 
         return inflater.inflate(R.layout.fragment_movie_list, container, false);
     }
@@ -63,9 +52,9 @@ public class MovieListFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.e("MovieListFragment", "onViewCreated");
         movieViewModel = new ViewModelProvider(requireActivity()).get(MovieViewModel.class);
         RecyclerView movieGrid = view.getRootView().findViewById(R.id.movie_grid);
+        // set more columns if the device is in landscape
         int columns = getResources().getConfiguration().orientation == OrientationHelper
                 .VERTICAL ? 2 : 4;
         GridLayoutManager layoutManager = new GridLayoutManager(getContext(), columns,
@@ -75,14 +64,11 @@ public class MovieListFragment extends Fragment {
         mMovieAdapter = new ImageViewAdapter(getContext());
         movieGrid.setAdapter(mMovieAdapter);
 
-        Log.e(LOG_TAG, "ON CREATE");
-
         if (savedInstanceState != null) {
             posters = savedInstanceState.getStringArrayList(POSTERS);
             movieIds = savedInstanceState.getIntArray(MOVIE_IDS);
         } else {
             mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-//            mSharedPreferences.registerOnSharedPreferenceChangeListener(getContext());
             loadMovieList();
         }
     }

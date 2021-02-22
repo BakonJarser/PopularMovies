@@ -1,7 +1,6 @@
 package com.cellblock70.popularmovies.UI.Details;
 
 import android.annotation.SuppressLint;
-import android.app.ActionBar;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -17,8 +16,8 @@ import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
-import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
@@ -32,22 +31,14 @@ import com.cellblock70.popularmovies.data.database.MovieTrailer;
 import com.cellblock70.popularmovies.databinding.FragmentMovieDetailsBinding;
 
 
-public class MovieDetailsFragment extends Fragment {
+public class MovieDetailsActivity extends AppCompatActivity {
 
-    private static final String LOG_TAG = MovieDetailsFragment.class.getSimpleName();
+    private static final String LOG_TAG = MovieDetailsActivity.class.getSimpleName();
     private LinearLayout mTrailerLinearLayout;
     private LinearLayout mReviewLinearLayout;
     private Integer movieId;
     private FragmentMovieDetailsBinding mDetailBinding;
     private MovieDetailViewModel viewModel;
-
-    public MovieDetailsFragment() {
-
-    }
-
-    public void setMovieId(int movieId) {
-        this.movieId = movieId;
-    }
 
     /**
      * Updates the tables in the database to reflect the users new preference.
@@ -58,18 +49,20 @@ public class MovieDetailsFragment extends Fragment {
         viewModel.setIsFavorite(((ToggleButton) view).isChecked());
     }
 
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
             movieId = savedInstanceState.getInt(MovieListFragment.MOVIE_ID, -1);
+        } else {
+            movieId = getIntent().getIntExtra(MovieListFragment.MOVIE_ID, -1);
         }
-        mDetailBinding = DataBindingUtil.setContentView(getActivity(), R.layout.fragment_movie_details);
-        viewModel = new MovieDetailViewModel(getActivity().getApplication(), movieId);
+        mDetailBinding = DataBindingUtil.setContentView(this, R.layout.fragment_movie_details);
+        viewModel = new MovieDetailViewModel(this.getApplication(), movieId);
         viewModel.getMovieLiveData().observe(this, movie -> {
             if (movie != null && movie.getMovie() != null) { loadMovieIntoView(movie); }
         });
-//        setupActionBar();
         if (savedInstanceState != null) {
             Log.e(LOG_TAG, "Saved instance wasn't null");
 
@@ -91,11 +84,11 @@ public class MovieDetailsFragment extends Fragment {
             Log.e(LOG_TAG, "Movie doesn't exist in database:" + movieId);
             mDetailBinding.titleView.setText(R.string.error_could_not_find_movie_in_db);
         } else {
-
+            Log.i(LOG_TAG, "Loading movie " + movie.getTitle());
             try {
                 final String backdropUrl;
                 DisplayMetrics metrics = new DisplayMetrics();
-                getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+                getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
                 // If in landscape then load the movie backdrop, else load the movie poster.
                 if (metrics.widthPixels > metrics.heightPixels) {
@@ -108,11 +101,13 @@ public class MovieDetailsFragment extends Fragment {
                         .heightPixels).centerCrop().into(new CustomTarget<Drawable>() {
                     @Override
                     public void onLoadCleared(@Nullable Drawable placeholder) {
+                        // FIXME figure out why this is being called
                         Log.e(LOG_TAG, "Failed to load image.  Load was canceled.");
                     }
 
                     @Override
                     public void onResourceReady(@NonNull Drawable resource, @Nullable Transition transition) {
+                        Log.d(LOG_TAG, "Setting background for movie " + movieId);
                         mDetailBinding.activityMovieDetailsScrollview.setBackground(resource);
 
                     }
@@ -165,17 +160,6 @@ public class MovieDetailsFragment extends Fragment {
         outState.putInt(MovieListFragment.MOVIE_ID, movieId);
     }
 
-//    /**
-//     * Set up the {@link android.app.ActionBar}, if the API is available.
-//     */
-//    private void setupActionBar() {
-//        ActionBar actionBar = getActivity().getActionBar();
-//        if (actionBar != null) {
-//            // Show the Up button in the action bar.
-//            actionBar.setDisplayHomeAsUpEnabled(true);
-//        }
-//    }
-
     /**
      * Loads the review into a linear layout.
      *
@@ -212,7 +196,7 @@ public class MovieDetailsFragment extends Fragment {
         button.setOnClickListener(v -> {
                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                 Log.i(LOG_TAG, uri.toString());
-                getActivity().startActivity(intent);
+                startActivity(intent);
         });
         return button;
     }

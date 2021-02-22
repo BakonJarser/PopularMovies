@@ -17,7 +17,7 @@
             android:background="@color/colorHighlightGray"
             android:orientation="vertical"
             android:padding="8dp"
-            tools:context="com.cellblock70.popularmovies.UI.Details.MovieDetailsFragment">
+            tools:context="com.cellblock70.popularmovies.UI.Details.MovieDetailsActivity">
 
             <ToggleButton
                 android:id="@+id/favorite_button"
