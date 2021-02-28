@@ -34,6 +34,7 @@ public class MovieListFragment extends Fragment {
     private ImageViewAdapter mMovieAdapter;
     private ArrayList<String> posters = new ArrayList<>();
     private int[] movieIds;
+    private String[] movieTitles;
     private MovieViewModel movieViewModel;
     SharedPreferences mSharedPreferences;
     String movieListType = "popular";
@@ -81,9 +82,11 @@ public class MovieListFragment extends Fragment {
             LiveData<List<Movie>> movieData = movieViewModel.getMovies(movieListType);
             movieData.observe(getViewLifecycleOwner(), movies -> {
                 movieIds = new int[movies.size()];
+                movieTitles = new String[movies.size()];
                 int index = 0;
                 for (Movie movie : movies) {
                     posters.add(movie.getPosterPath());
+                    movieTitles[index] = movie.getTitle();
                     movieIds[index++] = movie.getId();
                 }
                 mMovieAdapter.notifyDataSetChanged();
@@ -143,6 +146,7 @@ public class MovieListFragment extends Fragment {
             ImageView posterView = holder.posterView;
             posterView.setScaleType(ImageView.ScaleType.FIT_XY);
             Glide.with(mContext).load(posters.get(position)).into(posterView);
+            posterView.setContentDescription(movieTitles[position]);
         }
 
         @Override
