@@ -46,7 +46,17 @@ public class MovieDetailsActivity extends AppCompatActivity {
      * @param view - the view that was clicked to toggle the favorites.
      */
     public void onFavoriteClicked(View view) {
-        viewModel.setIsFavorite(((ToggleButton) view).isChecked());
+        boolean isChecked = ((ToggleButton) view).isChecked();
+        setFavoriteButtonContentDescription(view, isChecked);
+        viewModel.setIsFavorite(isChecked);
+    }
+
+    private void setFavoriteButtonContentDescription(View view, boolean isChecked) {
+        if (isChecked) {
+            view.setContentDescription("This movie is selected as a favorite");
+        } else {
+            view.setContentDescription("This movie isn't selected as a favorite");
+        }
     }
 
 
@@ -115,6 +125,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
                 });
                 ToggleButton favoriteButton = mDetailBinding.favoriteButton;
                 favoriteButton.setChecked(isFavorite);
+                setFavoriteButtonContentDescription(favoriteButton, isFavorite);
                 mDetailBinding.originalTitleView.setText(movie.getOriginalTitle());
                 mDetailBinding.titleView.setText(movie.getTitle());
                 mDetailBinding.synopsis.setText(movie.getSynopsis());

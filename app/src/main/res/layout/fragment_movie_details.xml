@@ -19,16 +19,41 @@
             android:padding="8dp"
             tools:context="com.cellblock70.popularmovies.UI.Details.MovieDetailsActivity">
 
-            <ToggleButton
-                android:id="@+id/favorite_button"
-                android:layout_width="@dimen/favorite_button_size"
-                android:layout_height="@dimen/favorite_button_size"
-                android:background="@drawable/favorite_toggle_selector"
-                android:onClick="onFavoriteClicked"
-                android:textOff=""
-                android:textOn=""
+            <LinearLayout
+                android:id="@+id/trailer_list_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/synopsis">
+
+                <TextView
+                    android:id="@+id/trailer_label_text_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/trailers"
+                    android:textColor="@color/colorAccent"
+                    android:textSize="18sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/review_list_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/trailer_list_view">
+
+                <TextView
+                    android:id="@+id/review_label_text_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/review_label"
+                    android:textColor="@color/colorAccent"
+                    android:textSize="18sp" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/title_view"
@@ -48,9 +73,9 @@
                 android:text="@string/original_title"
                 android:textColor="@color/colorAccent"
                 android:textSize="18sp"
+                app:layout_constraintBaseline_toBaselineOf="@+id/original_title_view"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toLeftOf="@+id/original_title_view"
-                app:layout_constraintBaseline_toBaselineOf="@+id/original_title_view"
                 app:layout_constraintTop_toBottomOf="@id/title_view" />
 
             <TextView
@@ -124,41 +149,18 @@
                 app:layout_constraintTop_toBottomOf="@id/user_rating"
                 tools:text="A very, very, very, very,very, very,very, very,very, very,very, very,very, very,very, very,very, very,very, very,very, very,very, very,very, very,very, very,very, very, long synopsis goes here." />
 
-            <LinearLayout
-                android:id="@+id/trailer_list_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
+            <ToggleButton
+                android:id="@+id/favorite_button"
+                android:layout_width="@dimen/favorite_button_size"
+                android:layout_height="0dp"
+                app:layout_constraintDimensionRatio="1:1"
+                android:background="@drawable/favorite_toggle_selector"
+                android:onClick="onFavoriteClicked"
+                android:textOff=""
+                android:textOn=""
+                android:contentDescription="Favorite Toggle Button"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/synopsis">
-
-                <TextView
-                    android:id="@+id/trailer_label_text_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/trailers"
-                    android:textColor="@color/colorAccent"
-                    android:textSize="18sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/review_list_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/trailer_list_view">
-
-                <TextView
-                    android:id="@+id/review_label_text_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/review_label"
-                    android:textColor="@color/colorAccent"
-                    android:textSize="18sp" />
-            </LinearLayout>
+                app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 </layout>
