@@ -204,11 +204,13 @@ public class MovieDetailsActivity extends AppCompatActivity {
         final Uri uri = Uri.parse("https://youtube.com/").buildUpon()
                 .appendPath("watch")
                 .appendQueryParameter("v", key).build();
-        button.setOnClickListener(v -> {
+        if (null != getContentResolver().getType(uri)) {
+            button.setOnClickListener(v -> {
                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                 Log.i(LOG_TAG, uri.toString());
                 startActivity(intent);
-        });
+            });
+        }
         return button;
     }
 }
