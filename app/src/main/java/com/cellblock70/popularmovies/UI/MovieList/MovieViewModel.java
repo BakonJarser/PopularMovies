@@ -5,8 +5,10 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.cellblock70.popularmovies.data.MovieRepository;
+import com.cellblock70.popularmovies.data.database.CompleteMovie;
 import com.cellblock70.popularmovies.data.database.Movie;
 
 import java.util.List;
@@ -15,37 +17,25 @@ public class MovieViewModel extends AndroidViewModel {
 
     //private MovieDatabase movieDatabase;
     private LiveData<List<Movie>> allMovies;
-    private LiveData<List<Movie>> favoriteMovies;
+    private MutableLiveData<List<CompleteMovie>> favoriteMovies;
     private MovieRepository movieRepository;
+    LiveData<List<CompleteMovie>> favorites = favoriteMovies;
 
     public MovieViewModel(@NonNull Application application) {
         super(application);
         movieRepository = MovieRepository.provideRepository(application);
+        favoriteMovies = getFavorites();
     }
 
     public LiveData<List<Movie>> getMovies(String movieListType) {
-        //if (allMovies == null) {
-            allMovies = movieRepository.getMovies(movieListType);
-       // }
+        allMovies = movieRepository.getMovies(movieListType);
         return allMovies;
     }
 
-    public void reloadMovies(String movieListType) {
-        deleteMovies();
-        getMovies(movieListType);
+    public MutableLiveData<List<CompleteMovie>> getFavorites() {
+        if (favoriteMovies == null) {
+            favoriteMovies = movieRepository.getFavorites();
+        }
+        return favoriteMovies;
     }
-
-    public void deleteMovies() {
-        movieRepository.deleteAllExceptFavorites();
-        allMovies.getValue().clear();
-
-    }
-
-    // TODO implement favorites menu
-//    public LiveData<List<Movie>> getFavorites() {
-//        if (favoriteMovies == null) {
-//            favoriteMovies = movieRepository.getFavoritesAlreadyInBackground();
-//        }
-//        return favoriteMovies;
-//    }
 }

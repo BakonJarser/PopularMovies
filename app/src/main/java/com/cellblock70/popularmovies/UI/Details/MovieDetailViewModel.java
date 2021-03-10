@@ -26,11 +26,6 @@ public class MovieDetailViewModel extends ViewModel {
         return movie;
     }
 
-    public boolean getIsFavorite() {
-
-        return movieRepository.getIsFavorite(movieId);
-    }
-
     public void setIsFavorite(boolean isFavorite) {
         if (isFavorite) {
             movieRepository.setIsFavoriteInDb(movieId);

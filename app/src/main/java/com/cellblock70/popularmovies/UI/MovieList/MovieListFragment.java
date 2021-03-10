@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.cellblock70.popularmovies.R;
 import com.cellblock70.popularmovies.UI.MainActivity;
+import com.cellblock70.popularmovies.data.database.CompleteMovie;
 import com.cellblock70.popularmovies.data.database.Movie;
 
 import java.util.ArrayList;
@@ -100,18 +101,19 @@ public class MovieListFragment extends Fragment {
      */
     private void getFavoritesFromDatabase() {
         // TODO Get and store images in the database instead of loading them every time.
-        // TODO get favorites from the db
 
-//        LiveData<List<Movie>> favoriteData = movieViewModel.getFavorites();
-//        favoriteData.observe(MainActivity.this, movies -> {
-//            movieIds = new int[movies.size()];
-//            int index = 0;
-//            for (Movie movie : movies) {
-//                posters.add(movie.getPosterPath());
-//                movieIds[index++] = movie.getId();
-//            }
-//            mMovieAdapter.notifyDataSetChanged();
-//        });
+        LiveData<List<CompleteMovie>> favoriteData = movieViewModel.getFavorites();
+        favoriteData.observe(getViewLifecycleOwner(), movies -> {
+            movieIds = new int[movies.size()];
+            movieTitles = new String[movies.size()];
+            int index = 0;
+            for (CompleteMovie movie : movies) {
+                posters.add(movie.getMovie().getPosterPath());
+                movieTitles[index] = movie.getMovie().getTitle();
+                movieIds[index++] = movie.getMovie().getId();
+            }
+            mMovieAdapter.notifyDataSetChanged();
+        });
     }
 
     @Override

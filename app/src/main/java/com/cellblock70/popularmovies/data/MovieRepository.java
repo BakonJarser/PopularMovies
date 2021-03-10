@@ -26,8 +26,7 @@ public class MovieRepository {
     private final AppExecutors executors;
     private static MovieRepository instance;
     private final MovieNetworkDataSource movieDataSource;
-    private List<Favorite> favorites;
-    private MutableLiveData<List<Favorite>> favoriteLD;
+    private MutableLiveData<List<CompleteMovie>> favoriteLD;
 
     private MovieRepository(MovieDao movieDao, MovieNetworkDataSource dataSource,
                             AppExecutors executors) {
@@ -36,21 +35,21 @@ public class MovieRepository {
         this.executors = executors;
 
         favoriteLD = new MutableLiveData<>();
-        getFavorites();
-        favoriteLD.observeForever(
-                favorites1 ->
-                {
-            //favorites = favorites1;
-            Log.e("asdfasdf", "Is favorites null? " + (favorites == null ? "yes" : "no"));
-        });
-
+        initFavorites();
     }
 
-    private void getFavorites() {
-        executors.diskIO().execute(() -> {
-            favoriteLD.postValue(movieDao.getFavorites().getValue());
-            favorites = movieDao.getFavorites().getValue();
-        });
+    private void initFavorites() {
+        synchronized (this) {
+            if (favoriteLD.getValue() == null) {
+                executors.diskIO().execute(() -> {
+                    favoriteLD.postValue(movieDao.getFavorites());
+                });
+            }
+        }
+    }
+
+    public MutableLiveData<List<CompleteMovie>> getFavorites() {
+        return favoriteLD;
     }
 
     private static MovieRepository getInstance(MovieDao movieDao, MovieNetworkDataSource dataSource,
@@ -105,21 +104,6 @@ public class MovieRepository {
     public void setIsFavoriteInDb(int movieId) {
         Log.d(LOG_TAG, "Inserting movie into favorites: " + movieId);
         executors.diskIO().execute(() ->  movieDao.insert(new Favorite(movieId)));
-    }
-
-    public boolean getIsFavorite(int movieId) {
-        if (favorites != null) {
-            for (Favorite fav : favorites) {
-                if (fav.getMovieId() == movieId) {
-                    return true;
-                } else {
-                    Log.e("Not the favorite", String.format("expected %d got %d", movieId, fav.getMovieId()));
-                }
-            }
-        } else {
-            Log.e(LOG_TAG, "It's still null");
-        }
-        return false;
     }
 
     public void setNotFavorite(int movieId) {

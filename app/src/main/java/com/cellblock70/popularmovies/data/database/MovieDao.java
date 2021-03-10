@@ -1,7 +1,6 @@
 package com.cellblock70.popularmovies.data.database;
 
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -14,8 +13,10 @@ import java.util.List;
 @Dao
 public interface MovieDao {
 
-    @Query("SELECT * FROM favorite")
-    LiveData<List<Favorite>> getFavorites();
+    @Transaction
+    @Query("SELECT * FROM details WHERE movie_id IN (SELECT * FROM favorite)")
+    List<CompleteMovie> getFavorites();
+
     @Delete
     void delete(Favorite favorite);
     @Insert(onConflict = OnConflictStrategy.REPLACE)
