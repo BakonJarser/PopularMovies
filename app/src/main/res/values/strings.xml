@@ -52,5 +52,7 @@
     <string name="review_label">Reviews</string>
     <string name="reviewer">Reviewer:&#160;&#160;</string>
     <string name="error_could_not_find_movie_in_db">Error:  Could not locate movie in database.</string>
+    <string name="rating_formatter">"%1$.2f   (%2$d votes)"</string>
+    <string name="favorite_toggle_button_description">Favorite Toggle Button</string>
 
 </resources>

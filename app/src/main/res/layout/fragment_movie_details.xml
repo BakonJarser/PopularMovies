@@ -5,6 +5,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <data>
+        <variable
+            name="movie"
+            type="com.cellblock70.popularmovies.data.database.Movie" />
+        <variable
+            name="viewmodel"
+            type="com.cellblock70.popularmovies.ui.details.MovieDetailsViewModel" />
+    </data>
+
+
     <ScrollView
         android:id="@+id/activity_movie_details_scrollview"
         android:layout_width="match_parent"
@@ -17,7 +27,7 @@
             android:background="@color/colorHighlightGray"
             android:orientation="vertical"
             android:padding="8dp"
-            tools:context="com.cellblock70.popularmovies.UI.Details.MovieDetailsActivity">
+            tools:context="com.cellblock70.popularmovies.ui.details.MovieDetailsActivity">
 
             <LinearLayout
                 android:id="@+id/trailer_list_view"
@@ -63,7 +73,8 @@
                 app:layout_constraintLeft_toRightOf="@+id/favorite_button"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:text="Title goes here." />
+                tools:text="Title goes here."
+                android:text="@{movie.title}"/>
 
             <TextView
                 android:id="@+id/original_title_label_view"
@@ -74,6 +85,7 @@
                 android:textColor="@color/colorAccent"
                 android:textSize="18sp"
                 app:layout_constraintBaseline_toBaselineOf="@+id/original_title_view"
+                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toLeftOf="@+id/original_title_view"
                 app:layout_constraintTop_toBottomOf="@id/title_view" />
@@ -88,7 +100,8 @@
                 app:layout_constraintLeft_toLeftOf="@+id/release_date"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/title_view"
-                tools:text="Original Title Goes Here" />
+                tools:text="Original Title Goes Here"
+                android:text="@{movie.originalTitle}"/>
 
             <TextView
                 android:id="@+id/release_date_label"
@@ -115,7 +128,8 @@
                 app:layout_constraintLeft_toRightOf="@id/release_date_label"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/original_title_view"
-                tools:text="2016-08-26" />
+                tools:text="2016-08-26"
+                android:text="@{movie.releaseDate}"/>
 
             <TextView
                 android:id="@+id/user_rating_label"
@@ -138,7 +152,9 @@
                 app:layout_constraintLeft_toLeftOf="@id/release_date"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/release_date"
-                tools:text="User Rating:  5.0 (459 votes)" />
+                tools:text="5.0 (459 votes)"
+                app:rating="@{movie.rating}"
+                app:voteCount="@{movie.reviews}"/>
 
             <TextView
                 android:id="@+id/synopsis"
@@ -147,6 +163,7 @@
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/user_rating"
+                android:text="@{movie.synopsis}"
                 tools:text="A very, very, very, very,very, very,very, very,very, very,very, very,very, very,very, very,very, very,very, very,very, very,very, very,very, very,very, very,very, very, long synopsis goes here." />
 
             <ToggleButton
@@ -155,10 +172,10 @@
                 android:layout_height="0dp"
                 app:layout_constraintDimensionRatio="1:1"
                 android:background="@drawable/favorite_toggle_selector"
-                android:onClick="onFavoriteClicked"
                 android:textOff=""
                 android:textOn=""
-                android:contentDescription="Favorite Toggle Button"
+                android:onClick="@{() -> viewmodel.toggleFavorite()}"
+                android:contentDescription="@string/favorite_toggle_button_description"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
