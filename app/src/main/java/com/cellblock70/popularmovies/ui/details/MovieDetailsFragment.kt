@@ -8,12 +8,15 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
@@ -30,6 +33,11 @@ class MovieDetailsFragment : Fragment() {
     lateinit var binding: FragmentMovieDetailsBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+
+        setHasOptionsMenu(true)
+        val activity = requireActivity() as AppCompatActivity
+        activity.supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
         val application = requireActivity().application
         binding = FragmentMovieDetailsBinding.inflate(inflater)
         val movieId = MovieDetailsFragmentArgs.fromBundle(requireArguments()).movieId
@@ -133,5 +141,13 @@ class MovieDetailsFragment : Fragment() {
             startActivity(Intent(Intent.ACTION_VIEW, uri))
         }
         return button
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            findNavController().navigate(MovieDetailsFragmentDirections.actionMovieDetailsFragmentToMovieListFragment())
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 }

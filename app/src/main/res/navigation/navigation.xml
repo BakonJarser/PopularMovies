@@ -15,7 +15,8 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right"
-            app:popUpTo="@id/movieListFragment" />
+            app:popUpTo="@id/movieListFragment"
+            app:popUpToInclusive="false" />
     </fragment>
     <fragment
         android:id="@+id/movieDetailsFragment"
@@ -28,7 +29,8 @@
             app:exitAnim="@anim/slide_out_right"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right"
-            app:popUpTo="@id/movieListFragment" />
+            app:popUpTo="@id/movieListFragment"
+            app:popUpToInclusive="true" />
         <argument
             android:name="movieId"
             app:argType="integer" />

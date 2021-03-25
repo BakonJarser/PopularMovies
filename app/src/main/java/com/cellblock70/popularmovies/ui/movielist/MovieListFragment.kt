@@ -2,23 +2,37 @@ package com.cellblock70.popularmovies.ui.movielist
 
 import android.content.res.Configuration
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.iterator
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.cellblock70.popularmovies.MyApplication
 import com.cellblock70.popularmovies.R
+import com.cellblock70.popularmovies.data.MovieRepository
+import com.cellblock70.popularmovies.data.database.getDatabase
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class MovieListFragment : Fragment() {
 
     private lateinit var viewModel : MovieViewModel
     private lateinit var movieGridAdapter: MovieGridAdapter
+    private lateinit var optionsMenu: Menu
+    private lateinit var application: MyApplication
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        application = requireActivity().application as MyApplication
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?): View? {
-
+        setHasOptionsMenu(true)
         return inflater.inflate(R.layout.fragment_movie_list, container, false)
     }
 
@@ -44,5 +58,67 @@ class MovieListFragment : Fragment() {
         viewModel.movies.observe(viewLifecycleOwner, { movieList ->
             movieGridAdapter.submitList(movieList)
         })
+
+        val activity = requireActivity() as AppCompatActivity
+        activity.supportActionBar?.setHomeButtonEnabled(false)
+        activity.supportActionBar?.setDisplayHomeAsUpEnabled(false)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+
+        inflater.inflate(R.menu.main, menu)
+        optionsMenu = menu
+        setMenuPref()
+    }
+
+    private fun setMenuPref() {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        val selectedPref = prefs.getString(getString(R.string.movie_list_type), "popular")
+        val selectedPrefTitle = application.movieListTypeMapKeyIsValues[selectedPref]
+        Timber.e("Setting menu pref to $selectedPrefTitle")
+        for (menuItem in optionsMenu.iterator()) {
+            if (menuItem.title == selectedPrefTitle) {
+                menuItem.isChecked = true
+                break
+            }
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val menuText = item.title
+        menuText?.let {
+
+            val prefToSet = application.movieListTypeMapKeyIsTitles[menuText.toString()] ?: "popular"
+            val isMovieListTypeChanged = when (item.itemId) {
+                R.id.popular -> setMovieListPref(R.id.popular, prefToSet)
+                R.id.top_rated -> setMovieListPref(R.id.top_rated, prefToSet)
+                R.id.upcoming -> setMovieListPref(R.id.upcoming, prefToSet)
+                R.id.now_playing -> setMovieListPref(R.id.now_playing, prefToSet)
+                R.id.favorites -> setMovieListPref(R.id.favorites, prefToSet)
+
+                else -> false
+            }
+
+            if (isMovieListTypeChanged) {
+                val repository = MovieRepository(getDatabase(requireContext()))
+                lifecycleScope.launch {
+                    val language = application.applicationContext.getString(R.string.language)
+                    repository.getMovies(prefToSet, 1, language)
+                }
+            }
+        }
+
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun setMovieListPref(menuId : Int, prefToSet: String) : Boolean {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
+
+        Timber.e("Setting pref to $prefToSet")
+        prefs.edit().putString(getString(R.string.movie_list_type), prefToSet)
+            .apply()
+        optionsMenu.findItem(menuId).isChecked = true
+        return true
     }
 }
