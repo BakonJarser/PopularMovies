@@ -29,7 +29,7 @@ private const val baseBackdropURL = "https://image.tmdb.org/t/p/w780/"
 
 class MovieDetailsFragment : Fragment() {
 
-    lateinit var viewModel: MovieDetailsViewModel
+    private lateinit var viewModel: MovieDetailsViewModel
     lateinit var binding: FragmentMovieDetailsBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -49,7 +49,7 @@ class MovieDetailsFragment : Fragment() {
             }
         }
 
-        viewModel.reviews.observe(viewLifecycleOwner, { reviews ->
+        viewModel.reviews.observe(viewLifecycleOwner) { reviews ->
             reviews.let {
                 binding.reviewListView.removeAllViews()
                 binding.reviewListView.addView(binding.reviewLabelTextView)
@@ -59,25 +59,25 @@ class MovieDetailsFragment : Fragment() {
                     binding.reviewListView.addView(getReviewLayout(author, text))
                 }
             }
-        })
+        }
 
-        viewModel.trailers.observe(viewLifecycleOwner, { trailers ->
+        viewModel.trailers.observe(viewLifecycleOwner) { trailers ->
             binding.trailerListView.removeAllViews()
             binding.trailerListView.addView(binding.trailerLabelTextView)
             trailers.let {
                 for (trailer in it) {
                     val link = trailer.link
-                    link.let {
+                    link.let { key ->
                         val name = trailer.name ?: "Unknown Title"
-                        binding.trailerListView.addView(getTrailerButton(it!!, name))
+                        binding.trailerListView.addView(getTrailerButton(key!!, name))
                     }
                 }
             }
-        })
-        viewModel.favoriteLiveData.observe(viewLifecycleOwner, {
+        }
+        viewModel.favoriteLiveData.observe(viewLifecycleOwner) {
             // if the db call returns an empty list then this is not a favorite
             binding.favoriteButton.isChecked = it.isNotEmpty()
-        })
+        }
         binding.viewmodel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
         return binding.root
@@ -136,13 +136,15 @@ class MovieDetailsFragment : Fragment() {
         val uri = Uri.parse("https://youtube.com/").buildUpon()
             .appendPath("watch")
             .appendQueryParameter("v", key).build()
-        button.setOnClickListener { v: View? ->
+        button.setOnClickListener {
             Timber.i(uri.toString())
             startActivity(Intent(Intent.ACTION_VIEW, uri))
         }
         return button
     }
 
+    @Deprecated("Deprecated in Java")
+    // TODO use lifecycle aware MenuProvider instead
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
             findNavController().navigate(MovieDetailsFragmentDirections.actionMovieDetailsFragmentToMovieListFragment())

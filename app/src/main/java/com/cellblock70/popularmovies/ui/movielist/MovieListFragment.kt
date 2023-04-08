@@ -55,15 +55,16 @@ class MovieListFragment : Fragment() {
 
         val factory = MovieViewModelFactory(requireActivity().application)
         viewModel = factory.create(MovieViewModel::class.java)
-        viewModel.movies.observe(viewLifecycleOwner, { movieList ->
+        viewModel.movies.observe(viewLifecycleOwner) { movieList ->
             movieGridAdapter.submitList(movieList)
-        })
+        }
 
         val activity = requireActivity() as AppCompatActivity
         activity.supportActionBar?.setHomeButtonEnabled(false)
         activity.supportActionBar?.setDisplayHomeAsUpEnabled(false)
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
 
@@ -85,6 +86,8 @@ class MovieListFragment : Fragment() {
         }
     }
 
+    @Deprecated("Deprecated in Java")
+    // TODO use MenuProvider
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val menuText = item.title
         menuText?.let {

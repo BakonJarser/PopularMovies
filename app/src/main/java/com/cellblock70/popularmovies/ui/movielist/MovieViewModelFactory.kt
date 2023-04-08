@@ -7,7 +7,7 @@ import java.lang.IllegalArgumentException
 
 class MovieViewModelFactory(val application: Application) : ViewModelProvider.Factory {
     @Suppress("unchecked_cast")
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if(modelClass.isAssignableFrom(MovieViewModel::class.java)) {
             return MovieViewModel(application) as T
         }

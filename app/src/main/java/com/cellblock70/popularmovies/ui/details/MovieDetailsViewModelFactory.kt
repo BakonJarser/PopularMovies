@@ -8,10 +8,10 @@ import java.lang.IllegalArgumentException
 class MovieDetailsViewModelFactory(private val movieId: Int, private val application: Application)
     : ViewModelProvider.Factory {
     @Suppress("unchecked_cast")
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MovieDetailsViewModel::class.java)) {
             return MovieDetailsViewModel(movieId, application) as T
         }
-        throw IllegalArgumentException("Unknown viewmodel type")
+        throw IllegalArgumentException("Unknown ViewModel type")
     }
 }
