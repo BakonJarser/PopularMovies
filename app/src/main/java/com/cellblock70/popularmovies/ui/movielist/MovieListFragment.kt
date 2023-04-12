@@ -6,6 +6,7 @@ import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.iterator
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
@@ -20,7 +21,7 @@ import timber.log.Timber
 
 class MovieListFragment : Fragment() {
 
-    private lateinit var viewModel : MovieViewModel
+    private val viewModel : MovieViewModel by viewModels()
     private lateinit var movieGridAdapter: MovieGridAdapter
     private lateinit var optionsMenu: Menu
     private lateinit var application: MyApplication
@@ -53,8 +54,6 @@ class MovieListFragment : Fragment() {
     override fun onStart() {
         super.onStart()
 
-        val factory = MovieViewModelFactory(requireActivity().application)
-        viewModel = factory.create(MovieViewModel::class.java)
         viewModel.movies.observe(viewLifecycleOwner) { movieList ->
             movieGridAdapter.submitList(movieList)
         }

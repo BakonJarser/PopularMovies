@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
@@ -29,7 +30,13 @@ private const val baseBackdropURL = "https://image.tmdb.org/t/p/w780/"
 
 class MovieDetailsFragment : Fragment() {
 
-    private lateinit var viewModel: MovieDetailsViewModel
+    private val viewModel by lazy {
+        MovieDetailsViewModel(
+            MovieDetailsFragmentArgs.fromBundle(requireArguments()).movieId,
+            requireActivity().application
+        )
+    }
+
     lateinit var binding: FragmentMovieDetailsBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -38,11 +45,8 @@ class MovieDetailsFragment : Fragment() {
         val activity = requireActivity() as AppCompatActivity
         activity.supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        val application = requireActivity().application
         binding = FragmentMovieDetailsBinding.inflate(inflater)
-        val movieId = MovieDetailsFragmentArgs.fromBundle(requireArguments()).movieId
-        viewModel = MovieDetailsViewModelFactory(movieId, application).create(MovieDetailsViewModel::class.java)
-        viewModel.movie.observe(viewLifecycleOwner) {movie ->
+        viewModel.movie.observe(viewLifecycleOwner) { movie ->
             movie.let {
                 binding.movie = it
                 loadBackground(it)
@@ -87,21 +91,7 @@ class MovieDetailsFragment : Fragment() {
         val backdropUrl =
             if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) movie.backdropPath
             else movie.posterPath
-        val height : Int
-        val width : Int
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.R) {
-            // TODO test this with an older device
-            val metrics = DisplayMetrics()
-            requireActivity().windowManager.defaultDisplay.getRealMetrics(metrics)
-            height = metrics.heightPixels
-            width = metrics.widthPixels
-        } else {
-            // TODO image size looks a little off, make adjustments
-            val metrics = requireActivity().windowManager.currentWindowMetrics
-            height = metrics.bounds.height()
-            width = metrics.bounds.width()
-            Timber.e("height: $height   width: $width")
-        }
+        val (height, width) = getScreenHeightAndWidth()
         Timber.e("Loading $baseBackdropURL$backdropUrl")
         Glide.with(requireActivity()).load(baseBackdropURL + backdropUrl)
             .override(width, height)
@@ -116,6 +106,25 @@ class MovieDetailsFragment : Fragment() {
 
             }
         })
+    }
+
+    private fun getScreenHeightAndWidth(): Pair<Int, Int> {
+        val height : Int
+        val width : Int
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            // TODO test this with an older device
+            val metrics = DisplayMetrics()
+            requireActivity().windowManager.defaultDisplay.getRealMetrics(metrics)
+            height = metrics.heightPixels
+            width = metrics.widthPixels
+        } else {
+            // TODO image size looks a little off, make adjustments
+            val metrics = requireActivity().windowManager.currentWindowMetrics
+            height = metrics.bounds.height()
+            width = metrics.bounds.width()
+            Timber.e("height: $height   width: $width")
+        }
+        return Pair(height, width)
     }
 
     private fun getReviewLayout(author: String, content: String): LinearLayout {
