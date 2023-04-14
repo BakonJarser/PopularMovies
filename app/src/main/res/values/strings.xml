@@ -28,7 +28,7 @@
     <string name="movie_list_type">Movie List Type</string>
     <string-array name="pref_movie_list_type_titles">
         <item>Popular</item>
-        <item>Highest Rated</item>
+        <item>Top Rated</item>
         <item>Now Playing</item>
         <item>Upcoming</item>
         <item>@string/favorites</item>
@@ -40,8 +40,10 @@
         <item>upcoming</item>
         <item>@string/favorites</item>
     </string-array>
+
+    // Menu Names
     <string name="popular">Popular</string>
-    <string name="top_rated">Highest Rated</string>
+    <string name="top_rated">Top Rated</string>
     <string name="now_playing">Now Playing</string>
     <string name="upcoming">Upcoming</string>
     <string name="favorites">Favorites</string>
@@ -54,5 +56,6 @@
     <string name="error_could_not_find_movie_in_db">Error:  Could not locate movie in database.</string>
     <string name="rating_formatter">"%1$.2f   (%2$d votes)"</string>
     <string name="favorite_toggle_button_description">Favorite Toggle Button</string>
+    <string name="movieDetailsFragment">MovieDetailsFragment</string>
 
 </resources>

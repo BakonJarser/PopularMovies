@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
+import com.cellblock70.popularmovies.MyApplication
 
 import com.cellblock70.popularmovies.R
 import com.cellblock70.popularmovies.data.MovieRepository
@@ -16,7 +17,7 @@ import timber.log.Timber
 
 class MovieViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val database = getDatabase(application.applicationContext)
+    private val database = getDatabase(application as MyApplication)
     private val movieRepository = MovieRepository(database)
     val movies : LiveData<List<Movie>> = movieRepository.movies
     private val language = application.applicationContext.getString(R.string.language)

@@ -21,7 +21,7 @@
     <fragment
         android:id="@+id/movieDetailsFragment"
         android:name="com.cellblock70.popularmovies.ui.details.MovieDetailsFragment"
-        android:label="MovieDetailsFragment" >
+        android:label="@string/movieDetailsFragment" >
         <action
             android:id="@+id/action_movieDetailsFragment_to_movieListFragment"
             app:destination="@id/movieListFragment"
