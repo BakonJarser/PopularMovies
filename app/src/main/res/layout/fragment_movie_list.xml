@@ -5,22 +5,22 @@
             type="com.cellblock70.popularmovies.ui.movielist.MovieViewModel" />
     </data>
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/fragment_movie_list"
-    tools:context=".ui.movielist.MovieListFragment">
-
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/movie_grid"
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/fragment_movie_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="0dp"
-        android:clipToPadding="false"
+        tools:context=".ui.movielist.MovieListFragment">
 
-        android:padding="0dp"/>
 
-</FrameLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/movie_grid"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="0dp"
+            android:clipToPadding="false"
+
+            android:padding="0dp" />
+
+    </FrameLayout>
 </layout>

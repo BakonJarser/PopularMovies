@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/navigation"
@@ -7,7 +6,7 @@
     <fragment
         android:id="@+id/movieListFragment"
         android:name="com.cellblock70.popularmovies.ui.movielist.MovieListFragment"
-        android:label="MovieListFragment" >
+        android:label="MovieListFragment">
         <action
             android:id="@+id/action_movieListFragment_to_movieDetailsFragment"
             app:destination="@id/movieDetailsFragment"
@@ -21,7 +20,7 @@
     <fragment
         android:id="@+id/movieDetailsFragment"
         android:name="com.cellblock70.popularmovies.ui.details.MovieDetailsFragment"
-        android:label="@string/movieDetailsFragment" >
+        android:label="@string/movieDetailsFragment">
         <action
             android:id="@+id/action_movieDetailsFragment_to_movieListFragment"
             app:destination="@id/movieListFragment"
