@@ -9,14 +9,19 @@ import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
@@ -41,9 +46,9 @@ class MovieDetailsFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
 
-        setHasOptionsMenu(true)
         val activity = requireActivity() as AppCompatActivity
         activity.supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        setupMenuProvider(activity)
 
         binding = FragmentMovieDetailsBinding.inflate(inflater)
         viewModel.movie.observe(viewLifecycleOwner) { movie ->
@@ -152,13 +157,20 @@ class MovieDetailsFragment : Fragment() {
         return button
     }
 
-    @Deprecated("Deprecated in Java")
-    // TODO use lifecycle aware MenuProvider instead
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == android.R.id.home) {
-            findNavController().navigate(MovieDetailsFragmentDirections.actionMovieDetailsFragmentToMovieListFragment())
-            return true
-        }
-        return super.onOptionsItemSelected(item)
+    private fun setupMenuProvider(activity: ComponentActivity) {
+        activity.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {}
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    android.R.id.home -> {
+                        // Navigate back when the home button is pressed
+                        findNavController().navigateUp()
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 }
