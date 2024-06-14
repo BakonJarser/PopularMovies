@@ -43,13 +43,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setMovieListPref(prefToSet: String): Boolean {
+    private fun setMovieListPref(prefToSet: String) {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
 
         Timber.e("Setting pref to $prefToSet")
         prefs.edit()
             .putString(getString(R.string.movie_list_type), prefToSet)
             .apply()
-        return true
     }
 }

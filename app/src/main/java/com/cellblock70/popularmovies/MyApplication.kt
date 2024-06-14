@@ -6,7 +6,7 @@ import timber.log.Timber
 class MyApplication : Application() {
 
     val movieListTypeMapKeyIsTitles = HashMap<String, String>()
-    val movieListTypeMapKeyIsValues = HashMap<String, String>()
+    private val movieListTypeMapKeyIsValues = HashMap<String, String>()
 
     override fun onCreate() {
         super.onCreate()

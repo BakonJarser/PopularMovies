@@ -119,6 +119,7 @@ class MovieDetailsFragment : Fragment() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
             // TODO test this with an older device
             val metrics = DisplayMetrics()
+            @Suppress("DEPRECATION")
             requireActivity().windowManager.defaultDisplay.getRealMetrics(metrics)
             height = metrics.heightPixels
             width = metrics.widthPixels
