@@ -23,8 +23,7 @@ class MovieGridAdapter(private val listener: OnClickListener) : ListAdapter<Movi
         }
 
         override fun areContentsTheSame(oldItem: Movie, newItem: Movie): Boolean {
-            //TODO fix this
-            return oldItem.id == newItem.id
+            return oldItem == newItem
         }
 
     }

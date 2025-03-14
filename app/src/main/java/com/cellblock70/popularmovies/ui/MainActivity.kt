@@ -1,7 +1,11 @@
 package com.cellblock70.popularmovies.ui
 
 import android.os.Bundle
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
@@ -18,11 +22,25 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.activity_main)
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                leftMargin = insets.left
+                topMargin = insets.top
+                bottomMargin = insets.bottom
+                rightMargin = insets.right
+            }
+            windowInsets
+        }
 
         // Setup the bottom navigation
         val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottom_nav)
+        ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView) { v, windowInsets ->
+            v.updateLayoutParams<ViewGroup.MarginLayoutParams> { }
+            windowInsets
+        }
         bottomNavigationView.setOnItemSelectedListener {
             lifecycleScope.launch {
                 val prefToSet =
