@@ -1,41 +1,35 @@
 package com.cellblock70.popularmovies.ui.movielist
 
 import android.app.Application
-import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
-import androidx.preference.PreferenceManager
 import com.cellblock70.popularmovies.MyApplication
-
 import com.cellblock70.popularmovies.R
 import com.cellblock70.popularmovies.data.MovieRepository
 import com.cellblock70.popularmovies.data.database.Movie
 import com.cellblock70.popularmovies.data.database.getDatabase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-class MovieViewModel(application: Application) : AndroidViewModel(application) {
+class MovieViewModel(application: Application, var movieListType: String) : AndroidViewModel(application) {
 
     private val database = getDatabase(application as MyApplication)
     private val movieRepository = MovieRepository(database)
-    val movies : LiveData<List<Movie>> = movieRepository.movies
+    val movies : StateFlow<List<Movie>> = movieRepository.movies.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     private val language = application.applicationContext.getString(R.string.language)
-    private val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(application)
-    private val movieListTypePrefKey = application.getString(R.string.movie_list_type)
-    private var movieListType: String = prefs.getString(movieListTypePrefKey, "popular") ?: "popular"
 
     init {
-        getMovies()
+        getMovies(movieListType)
     }
 
-    private fun getMovies() {
+    private fun getMovies(movieListType: String?) {
         Timber.e( "getMovies $movieListType")
-        viewModelScope.launch {
-
-            movieRepository.getMovies(movieListType, 1, language)
-            // TODO what to do with an empty list?
-            Timber.e( "getMovies FINISHED ${movies.value?.size}")
+        viewModelScope.launch(Dispatchers.IO) {
+            movieRepository.getMovies(movieListType ?: "popular", 1, language)
         }
     }
 }

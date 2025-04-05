@@ -6,8 +6,8 @@ plugins {
      * project. Don"t use `apply false` in sub-projects. For more information,
      * see Applying external plugins with same version to subprojects.
      */
-    id("com.android.application") version "8.5.2" apply false
-    id("com.android.library") version "8.5.2" apply false
+    id("com.android.application") version "8.9.1" apply false
+    id("com.android.library") version "8.9.1" apply false
     id("org.jetbrains.kotlin.android") version "2.0.0" apply false
     id("com.google.devtools.ksp") version "2.0.0-1.0.22" apply false
 
@@ -16,7 +16,7 @@ plugins {
 buildscript {
 
     dependencies {
-        classpath("com.android.tools.build:gradle:8.5.2")
+        classpath("com.android.tools.build:gradle:8.9.1")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.0")
         classpath("androidx.navigation:navigation-safe-args-gradle-plugin:2.8.9")
 

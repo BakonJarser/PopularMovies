@@ -1,74 +1,69 @@
 package com.cellblock70.popularmovies.ui
 
 import android.os.Bundle
-import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
-import androidx.preference.PreferenceManager
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import com.cellblock70.popularmovies.MovieDetails
+import com.cellblock70.popularmovies.MovieGrid
 import com.cellblock70.popularmovies.MyApplication
-import com.cellblock70.popularmovies.R
-import com.cellblock70.popularmovies.data.MovieRepository
-import com.cellblock70.popularmovies.data.database.getDatabase
-import com.cellblock70.popularmovies.ui.details.MovieDetailsFragmentDirections
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.cellblock70.popularmovies.ui.details.MovieDetailsRootScreen
+import com.cellblock70.popularmovies.ui.movielist.MovieGridRootScreen
+import com.cellblock70.popularmovies.ui.theme.PopularMoviesTheme
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = true
-        setContentView(R.layout.activity_main)
+        setContent {
+            PopularMoviesTheme {
+                val navController = rememberNavController()
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
+                        MyNavigationBar(
+                            application = application as MyApplication,
+                            onMenuItemClicked = { preferenceSelected ->
+                                navController.navigate(MovieGrid(preferenceSelected ?: "popular"))
+                            }
+                        )
+                    }
+                ) { innerPadding ->
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                leftMargin = insets.left
-                topMargin = insets.top
-                bottomMargin = insets.bottom
-                rightMargin = insets.right
-            }
-            windowInsets
-        }
-
-        // Setup the bottom navigation
-        val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottom_nav)
-        ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView) { v, windowInsets ->
-            v.updateLayoutParams<ViewGroup.MarginLayoutParams> { }
-            windowInsets
-        }
-        bottomNavigationView.setOnItemSelectedListener {
-            lifecycleScope.launch {
-                val prefToSet =
-                    (application as MyApplication).movieListTypeMapKeyIsTitles[it.title]
-                        ?: "popular"
-                setMovieListPref(prefToSet)
-                val navController = supportFragmentManager.primaryNavigationFragment?.findNavController()
-                // Changing tabs while on the movie details tab will crash the app so navigate back to list
-                if (navController?.currentDestination?.label.contentEquals(getString(R.string.movieDetailsFragment))) {
-                    navController?.navigate(MovieDetailsFragmentDirections.actionMovieDetailsFragmentToMovieListFragment())
+                    NavHost(
+                        navController = navController,
+                        startDestination = MovieGrid("popular"),
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+                        composable<MovieGrid> { backStackEntry ->
+                            val movieGrid = backStackEntry.toRoute<MovieGrid>()
+                            MovieGridRootScreen(
+                                application = application as MyApplication,
+                                onMovieClicked = { movieId ->
+                                    navController.navigate(MovieDetails(movieId))
+                                },
+                                movieListType = movieGrid.movieListType
+                            )
+                        }
+                        composable<MovieDetails> { backStackEntry ->
+                            val movieDetails = backStackEntry.toRoute<MovieDetails>()
+                            MovieDetailsRootScreen(
+                                movieId = movieDetails.movieId,
+                                application = application as MyApplication
+                            )
+                        }
+                    }
                 }
-                val repository = MovieRepository(getDatabase(application as MyApplication))
-                val language = application.applicationContext.getString(R.string.language)
-                repository.getMovies(prefToSet, 1, language)
             }
-
-            true
         }
-    }
-
-    private fun setMovieListPref(prefToSet: String) {
-        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-
-        Timber.e("Setting pref to $prefToSet")
-        prefs.edit()
-            .putString(getString(R.string.movie_list_type), prefToSet)
-            .apply()
     }
 }

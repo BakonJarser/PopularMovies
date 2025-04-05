@@ -1,5 +1,0 @@
-<Button xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/trailer_button"
-    style="@style/trailer_button_style"
-    tools:text="Trailer 1" />

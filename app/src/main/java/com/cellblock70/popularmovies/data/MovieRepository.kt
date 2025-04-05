@@ -1,9 +1,19 @@
 package com.cellblock70.popularmovies.data
 
-import androidx.lifecycle.LiveData
 import com.cellblock70.popularmovies.BuildConfig
-import com.cellblock70.popularmovies.data.database.*
+import com.cellblock70.popularmovies.data.database.Favorite
+import com.cellblock70.popularmovies.data.database.Movie
+import com.cellblock70.popularmovies.data.database.MovieDatabase
 import com.cellblock70.popularmovies.data.network.TMDBApi
+import com.cellblock70.popularmovies.ui.details.MovieWithReviewsAndTrailers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import timber.log.Timber
 import java.util.LinkedList
@@ -12,12 +22,17 @@ private const val TMDB_API_KEY = BuildConfig.TMDB_MAP_API_KEY
 
 class MovieRepository(private val database: MovieDatabase) {
 
-    val movies : LiveData<List<Movie>> = database.movieDao.getMovieList()
+    private val scope = CoroutineScope(Dispatchers.IO)
+    private var currentlyLoadedMovie = -1
+    private val completeMovie : MutableStateFlow<MovieWithReviewsAndTrailers> = MutableStateFlow(MovieWithReviewsAndTrailers(movie = null, trailers = null, reviews = null, isFavorite = false))
+    private val _movies : Flow<List<Movie>> = database.movieDao.getMovieList()
+    val movies = _movies.stateIn(scope, SharingStarted.WhileSubscribed(5000), emptyList())
     private var currentMovieListType : String = "popular"
+
 
     suspend fun getMovies(movieListType: String, page: Int, language: String) {
 
-        if (movies.value.isNullOrEmpty() || currentMovieListType != movieListType) {
+        if (movies.value.isEmpty() || currentMovieListType != movieListType) {
             currentMovieListType = movieListType
             try{
                 getMovies(page, language)
@@ -78,20 +93,22 @@ class MovieRepository(private val database: MovieDatabase) {
         }
     }
 
-    fun getMovie(movieId: Int): LiveData<Movie> {
-        return database.movieDao.getMovie(movieId)
+    fun getCompleteMovie(movieId: Int): StateFlow<MovieWithReviewsAndTrailers> {
+        if (movieId != currentlyLoadedMovie) {
+            loadMovie(movieId)
+        }
+        return completeMovie
     }
 
-    fun getReviews(movieId: Int) : LiveData<List<MovieReview>> {
-        return database.movieDao.getReviews(movieId)
-    }
-
-    fun getTrailers(movieId: Int) : LiveData<List<MovieTrailer>> {
-        return database.movieDao.getTrailers(movieId)
-    }
-
-    fun getIsFavorite(movieId: Int): LiveData<List<Favorite>> {
-        return database.movieDao.getFavorite(movieId)
+    private fun loadMovie(movieId: Int) {
+        scope.launch {
+            currentlyLoadedMovie = movieId
+            val movie = database.movieDao.getMovie(currentlyLoadedMovie)
+            val reviews = database.movieDao.getReviews(currentlyLoadedMovie)
+            val trailers = database.movieDao.getTrailers(currentlyLoadedMovie)
+            val isFavorite = database.movieDao.isFavorite(currentlyLoadedMovie)
+            completeMovie.emit(MovieWithReviewsAndTrailers(movie = movie, trailers = trailers, reviews = reviews, isFavorite = isFavorite))
+        }
     }
 
     suspend fun setIsFavorite(movieId: Int, isFavorite: Boolean) {
@@ -102,5 +119,6 @@ class MovieRepository(private val database: MovieDatabase) {
             Timber.e("Deleting favorite: $movieId")
             database.movieDao.deleteFavorite(Favorite(movieId))
         }
+        completeMovie.emit(completeMovie.value.copy(isFavorite = isFavorite))
     }
 }
