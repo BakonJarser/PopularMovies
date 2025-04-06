@@ -1,25 +1,25 @@
 package com.cellblock70.popularmovies.data.database
 
+import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.cellblock70.popularmovies.MyApplication
 
 @Database(entities = [MovieTrailer::class, Favorite::class, MovieReview::class, Movie::class], version = 2, exportSchema = false)
 abstract class MovieDatabase : RoomDatabase() {
-    abstract val movieDao : MovieDao
-}
+    abstract fun movieDao(): MovieDao
 
-private lateinit var INSTANCE : MovieDatabase
+    companion object MovieDatabaseCompanion {
+        @Volatile
+        private var Instance: MovieDatabase? = null
 
-fun getDatabase(applicationContext: MyApplication) : MovieDatabase {
 
-    synchronized(MovieDatabase::class.java) {
-        if (!::INSTANCE.isInitialized) {
-            INSTANCE = Room.databaseBuilder(
-                applicationContext, MovieDatabase::class.java, "movie").build()
+        fun getDatabase(context: Context): MovieDatabase {
+            return Instance ?: synchronized(this) {
+                Room.databaseBuilder(
+                    context, MovieDatabase::class.java, "movie"
+                ).build().also { Instance = it }
+            }
         }
     }
-
-    return INSTANCE
 }

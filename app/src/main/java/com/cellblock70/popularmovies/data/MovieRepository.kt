@@ -25,7 +25,7 @@ class MovieRepository(private val database: MovieDatabase) {
     private val scope = CoroutineScope(Dispatchers.IO)
     private var currentlyLoadedMovie = -1
     private val completeMovie : MutableStateFlow<MovieWithReviewsAndTrailers> = MutableStateFlow(MovieWithReviewsAndTrailers(movie = null, trailers = null, reviews = null, isFavorite = false))
-    private val _movies : Flow<List<Movie>> = database.movieDao.getMovieList()
+    private val _movies : Flow<List<Movie>> = database.movieDao().getMovieList()
     val movies = _movies.stateIn(scope, SharingStarted.WhileSubscribed(5000), emptyList())
     private var currentMovieListType : String = "popular"
 
@@ -44,22 +44,22 @@ class MovieRepository(private val database: MovieDatabase) {
     }
 
     private suspend fun getMovies(page: Int, language: String) {
-        database.movieDao.deleteAllMovies()
+        database.movieDao().deleteAllMovies()
         Timber.e("Getting movies of type $currentMovieListType")
         if (currentMovieListType != "Favorites") {
             val queryResult =
                 TMDBApi.tmdbService.getMovies(currentMovieListType, page, language, TMDB_API_KEY)
-            database.movieDao.insertAll(*queryResult.results.toTypedArray())
+            database.movieDao().insertAll(*queryResult.results.toTypedArray())
             queryResult.results.forEach {
                 getTrailers(it.id, language)
                 getReviews(it.id, language)
             }
         } else {
             val downloadedMovies = LinkedList<Movie>()
-            database.movieDao.getFavoriteList().forEach {
+            database.movieDao().getFavoriteList().forEach {
                 Timber.e("Downloading favorite ${it.movieId}")
                 val movie = TMDBApi.tmdbService.getMovie(it.movieId.toString(), language, TMDB_API_KEY)
-                database.movieDao.insertAll(movie)
+                database.movieDao().insertAll(movie)
                 // save to a list so that trailers and reviews can be downloaded later
                 downloadedMovies.add(movie)
             }
@@ -75,7 +75,7 @@ class MovieRepository(private val database: MovieDatabase) {
         try {
             val queryResult = TMDBApi.tmdbService.getReviews(movieId, language, TMDB_API_KEY)
             queryResult.results.forEach { movieReview -> movieReview.movieId = movieId }
-            database.movieDao.insertAll(*queryResult.results.toTypedArray())
+            database.movieDao().insertAll(*queryResult.results.toTypedArray())
 
         } catch (e: HttpException) {
             Timber.e( e.message())
@@ -86,7 +86,7 @@ class MovieRepository(private val database: MovieDatabase) {
         try {
             val queryResult = TMDBApi.tmdbService.getTrailers(movieId, language, TMDB_API_KEY)
             queryResult.results.forEach { movieTrailer -> movieTrailer.movieId = movieId }
-            database.movieDao.insertAll(*queryResult.results.toTypedArray())
+            database.movieDao().insertAll(*queryResult.results.toTypedArray())
 
         } catch (e: HttpException) {
             Timber.e( e.message())
@@ -103,10 +103,10 @@ class MovieRepository(private val database: MovieDatabase) {
     private fun loadMovie(movieId: Int) {
         scope.launch {
             currentlyLoadedMovie = movieId
-            val movie = database.movieDao.getMovie(currentlyLoadedMovie)
-            val reviews = database.movieDao.getReviews(currentlyLoadedMovie)
-            val trailers = database.movieDao.getTrailers(currentlyLoadedMovie)
-            val isFavorite = database.movieDao.isFavorite(currentlyLoadedMovie)
+            val movie = database.movieDao().getMovie(currentlyLoadedMovie)
+            val reviews = database.movieDao().getReviews(currentlyLoadedMovie)
+            val trailers = database.movieDao().getTrailers(currentlyLoadedMovie)
+            val isFavorite = database.movieDao().isFavorite(currentlyLoadedMovie)
             completeMovie.emit(MovieWithReviewsAndTrailers(movie = movie, trailers = trailers, reviews = reviews, isFavorite = isFavorite))
         }
     }
@@ -114,10 +114,10 @@ class MovieRepository(private val database: MovieDatabase) {
     suspend fun setIsFavorite(movieId: Int, isFavorite: Boolean) {
         if (isFavorite) {
             Timber.e("Inserting favorite: $movieId")
-            database.movieDao.insert(Favorite(movieId))
+            database.movieDao().insert(Favorite(movieId))
         } else {
             Timber.e("Deleting favorite: $movieId")
-            database.movieDao.deleteFavorite(Favorite(movieId))
+            database.movieDao().deleteFavorite(Favorite(movieId))
         }
         completeMovie.emit(completeMovie.value.copy(isFavorite = isFavorite))
     }
