@@ -7,6 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -27,14 +29,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             PopularMoviesTheme {
                 val navController = rememberNavController()
+                val selectedTab = remember { mutableStateOf("popular") }
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
                         MyNavigationBar(
-                            application = application as MyApplication,
                             onMenuItemClicked = { preferenceSelected ->
                                 navController.navigate(MovieGrid(preferenceSelected ?: "popular"))
-                            }
+                                selectedTab.value = preferenceSelected ?: "popular"
+                            },
+                            selectedTab = selectedTab.value
                         )
                     }
                 ) { innerPadding ->

@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -63,7 +64,9 @@ fun MovieDetailsScreen(
     val textColor = Color.White
     val movie = value.movie ?: return (Unit)
 
-    Box(modifier = modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.TopStart) {
+    Box(modifier = modifier
+        .fillMaxSize()
+        .background(Color.Black), contentAlignment = Alignment.TopStart) {
         AsyncImage(
             // todo landscape poster
             // todo full screen pixel fold
@@ -79,15 +82,27 @@ fun MovieDetailsScreen(
         ) {
             //Title
             item {
-                Row(Modifier.padding(vertical = 8.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
                         text = movie.title.orEmpty(),
                         style = MaterialTheme.typography.headlineLarge,
                         color = textColor,
-                        modifier = Modifier.padding(top = 4.dp, start = 8.dp)
+                        modifier = Modifier.padding(top = 4.dp, start = 8.dp).weight(1f)
                     )
-                    IconButton(onClick = { action.invoke(MovieDetailsAction.OnFavoriteClicked(!value.isFavorite)) } ) {
-                        Icon(Icons.Filled.Favorite, contentDescription = stringResource(R.string.favorite_toggle_button_description), tint = if (value.isFavorite) MaterialTheme.colorScheme.tertiaryContainer else Color.White)
+                    IconButton(
+                        modifier = Modifier.minimumInteractiveComponentSize(),
+                        onClick = { action.invoke(MovieDetailsAction.OnFavoriteClicked(!value.isFavorite)) }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Favorite,
+                            contentDescription = stringResource(R.string.favorite_toggle_button_description),
+                            tint = if (value.isFavorite) MaterialTheme.colorScheme.tertiaryContainer else Color.White
+                        )
                     }
                 }
             }
@@ -229,7 +244,9 @@ fun StyledTextPair(modifier: Modifier, titleText: String, valueText: String) {
         Text(
             titleText,
             color = MaterialTheme.colorScheme.tertiaryContainer,
-            modifier = modifier.padding(horizontal = 12.dp, vertical = 2.dp).alignByBaseline(),
+            modifier = modifier
+                .padding(horizontal = 12.dp, vertical = 2.dp)
+                .alignByBaseline(),
             fontWeight = FontWeight.Bold
         )
         Text(text = valueText, color = Color.White, modifier = modifier.alignByBaseline())

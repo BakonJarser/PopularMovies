@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -20,8 +19,7 @@ import com.cellblock70.popularmovies.data.database.Movie
 
 @Composable
 fun MovieGridRootScreen(modifier: Modifier = Modifier, onMovieClicked: (Int) -> Unit, movieListType: String, application: MyApplication) {
-    val type = remember { mutableStateOf(movieListType) }
-    val viewModel = remember {  MovieViewModel(application = application, movieListType = type.value) }
+    val viewModel = remember {  MovieViewModel(application = application, movieListType = movieListType) }
     val state = viewModel.movies.collectAsState()
     MovieGridScreen(modifier = modifier, state.value, onMovieClicked)
 }
