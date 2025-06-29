@@ -19,9 +19,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cellblock70.popularmovies.R
+import com.cellblock70.popularmovies.ui.theme.PopularMoviesTheme
 
 @Composable
 fun MyNavigationBar(onMenuItemClicked: (String?) -> Unit, selectedTab: String) {
@@ -101,3 +103,14 @@ data class NavigationItem(
     val iconVector: ImageVector? = null,
     val value: String
 )
+
+@Preview(showBackground = true)
+@Composable
+fun MyNavigationBarPreview() {
+    PopularMoviesTheme {
+        MyNavigationBar(
+            selectedTab = "popular",
+            onMenuItemClicked = {}
+        )
+    }
+}
