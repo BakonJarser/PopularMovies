@@ -1,30 +1,43 @@
 package com.cellblock70.popularmovies.ui.movielist
 
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cellblock70.popularmovies.MyApplication
-import com.cellblock70.popularmovies.R
 import com.cellblock70.popularmovies.data.database.Movie
+import com.cellblock70.popularmovies.domain.MovieRepository
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-class MovieViewModel(val application: MyApplication, var movieListType: String) : AndroidViewModel(application) {
+@HiltViewModel(assistedFactory = MovieViewModel.MovieViewModelFactory::class)
+class MovieViewModel @AssistedInject constructor(
+    private val movieRepository: MovieRepository,
+    @Assisted("movieListType") val movieListType: String,
+    @Assisted("language") val language: String
+) : ViewModel() {
 
-    val movies : StateFlow<List<Movie>> = application.movieRepository.movies.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-    private val language = application.applicationContext.getString(R.string.language)
+    @AssistedFactory
+    interface MovieViewModelFactory {
+        fun create(
+            @Assisted("movieListType") movieListType: String,
+            @Assisted("language") language: String
+        ): MovieViewModel
+    }
+
+    val movies: StateFlow<List<Movie>> = movieRepository.getMovies()
 
     init {
         getMovies(movieListType)
     }
 
     private fun getMovies(movieListType: String?) {
-        Timber.e( "getMovies $movieListType")
+        Timber.e("getMovies $movieListType")
         viewModelScope.launch(Dispatchers.IO) {
-            application.movieRepository.getMovies(movieListType ?: "popular", 1, language)
+            movieRepository.getMovies(movieListType ?: "popular", 1, language)
         }
     }
 }

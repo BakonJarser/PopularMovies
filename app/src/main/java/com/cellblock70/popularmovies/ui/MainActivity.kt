@@ -10,17 +10,20 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.cellblock70.popularmovies.MovieDetails
 import com.cellblock70.popularmovies.MovieGrid
-import com.cellblock70.popularmovies.MyApplication
+import com.cellblock70.popularmovies.R
 import com.cellblock70.popularmovies.ui.details.MovieDetailsRootScreen
 import com.cellblock70.popularmovies.ui.movielist.MovieGridRootScreen
 import com.cellblock70.popularmovies.ui.theme.PopularMoviesTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,18 +54,17 @@ class MainActivity : ComponentActivity() {
                         composable<MovieGrid> { backStackEntry ->
                             val movieGrid = backStackEntry.toRoute<MovieGrid>()
                             MovieGridRootScreen(
-                                application = application as MyApplication,
                                 onMovieClicked = { movieId ->
                                     navController.navigate(MovieDetails(movieId))
                                 },
-                                movieListType = movieGrid.movieListType
+                                movieListType = movieGrid.movieListType,
+                                language = stringResource(R.string.language)
                             )
                         }
                         composable<MovieDetails> { backStackEntry ->
                             val movieDetails = backStackEntry.toRoute<MovieDetails>()
                             MovieDetailsRootScreen(
                                 movieId = movieDetails.movieId,
-                                application = application as MyApplication
                             )
                         }
                     }

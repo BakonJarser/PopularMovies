@@ -6,20 +6,29 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
-import com.cellblock70.popularmovies.MyApplication
 import com.cellblock70.popularmovies.R
 import com.cellblock70.popularmovies.data.database.Movie
 
 
 @Composable
-fun MovieGridRootScreen(modifier: Modifier = Modifier, onMovieClicked: (Int) -> Unit, movieListType: String, application: MyApplication) {
-    val viewModel = remember {  MovieViewModel(application = application, movieListType = movieListType) }
+fun MovieGridRootScreen(
+    modifier: Modifier = Modifier,
+    onMovieClicked: (Int) -> Unit,
+    movieListType: String,
+    language: String,
+    viewModel: MovieViewModel = hiltViewModel(
+        creationCallback = { movieViewModelFactory: MovieViewModel.MovieViewModelFactory ->
+            movieViewModelFactory.create(movieListType, language)
+        }
+    )
+) {
+    //remember {  MovieViewModel(application = application, movieListType = movieListType) }
     val state = viewModel.movies.collectAsState()
     MovieGridScreen(modifier = modifier, state.value, onMovieClicked)
 }

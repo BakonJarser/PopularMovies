@@ -36,8 +36,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
-import com.cellblock70.popularmovies.MyApplication
 import com.cellblock70.popularmovies.R
 import com.cellblock70.popularmovies.data.database.Movie
 import com.cellblock70.popularmovies.data.database.MovieReview
@@ -47,9 +47,12 @@ import com.cellblock70.popularmovies.data.database.MovieTrailer
 fun MovieDetailsRootScreen(
     modifier: Modifier = Modifier,
     movieId: Int,
-    application: MyApplication
+    viewModel: MovieDetailsViewModel = hiltViewModel(
+        creationCallback = { factory: MovieDetailsViewModel.Factory ->
+            factory.create(movieId)
+        }
+    )
 ) {
-    val viewModel = MovieDetailsViewModel(movieId = movieId, application = application)
     val state = viewModel.state.collectAsState()
 
     MovieDetailsScreen(modifier, state.value, viewModel::onAction)
