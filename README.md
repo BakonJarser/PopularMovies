@@ -7,7 +7,7 @@ Key Technologies
 
     Kotlin, Jetpack Compose, MVVM architecture
 
-    Room, Retrofit, Coroutines, Flows, Coil
+    Room, Retrofit, Coroutines, Flows, Coil, Dagger-Hilt
 
     Jetpack Navigation, Material Design 3
 
@@ -19,7 +19,7 @@ Learning Objectives
 
     Implement local caching and offline support with Room
 
-    Apply clean architecture principles and separation of concerns
+    Apply MVVM architecture principles
 
     Explore and integrate the latest Android libraries and platform features
 
