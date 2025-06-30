@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")
     kotlin("android")
     id("com.google.devtools.ksp")
-    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
     kotlin("plugin.serialization") version "2.0.21"
     id("dagger.hilt.android.plugin")
 }
@@ -26,6 +26,8 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
         }
     }
+
+    kotlin.compilerOptions.freeCompilerArgs.add("-Xannotation-default-target=param-property")
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -88,7 +90,7 @@ dependencies {
     implementation("io.coil-kt.coil3:coil-compose:3.2.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.2.0")
     implementation("androidx.compose.compiler:compiler:1.5.15")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
     // Hilt
     val hiltVersion = "2.56.2"
