@@ -9,11 +9,11 @@ plugins {
 
 android {
 
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         applicationId = "com.cellblock70.popularmovies"
         minSdk = 21
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 2
         versionName = "2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -86,7 +86,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.1")
     implementation("androidx.compose.material3:material3:1.3.2")
     implementation("androidx.activity:activity-compose:1.10.1")
-    implementation("androidx.navigation:navigation-compose:2.9.0")
+    implementation("androidx.navigation:navigation-compose:2.9.1")
     implementation("io.coil-kt.coil3:coil-compose:3.2.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.2.0")
     implementation("androidx.compose.compiler:compiler:1.5.15")
