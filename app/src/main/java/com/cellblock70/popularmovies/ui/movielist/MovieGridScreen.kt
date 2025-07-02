@@ -28,7 +28,6 @@ fun MovieGridRootScreen(
         }
     )
 ) {
-    //remember {  MovieViewModel(application = application, movieListType = movieListType) }
     val state = viewModel.movies.collectAsState()
     MovieGridScreen(modifier = modifier, state.value, onMovieClicked)
 }
@@ -37,7 +36,7 @@ fun MovieGridRootScreen(
 fun MovieGridScreen(modifier: Modifier, state: List<Movie>, onMovieClicked: (Int) -> Unit) {
 
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(200.dp),
+        columns = GridCells.Adaptive(150.dp),
         modifier,
         verticalArrangement = Arrangement.Top
     ) {
