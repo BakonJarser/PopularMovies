@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
@@ -39,8 +40,8 @@ fun MovieGridScreen(modifier: Modifier, state: List<Movie>, onMovieClicked: (Int
         modifier,
         verticalArrangement = Arrangement.Top
     ) {
-        items(state.size) { index ->
-            MovieGridItem(state[index], onMovieClicked)
+        items(items = state, key = { movie -> movie.id }) { movie ->
+            MovieGridItem(movie, onMovieClicked)
         }
     }
 }
