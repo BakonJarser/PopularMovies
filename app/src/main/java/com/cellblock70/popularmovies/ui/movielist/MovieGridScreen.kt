@@ -20,11 +20,10 @@ import com.cellblock70.popularmovies.data.database.Movie
 fun MovieGridRootScreen(
     modifier: Modifier = Modifier,
     onMovieClicked: (Int) -> Unit,
-    movieListType: String,
     language: String,
     viewModel: MovieViewModel = hiltViewModel(
         creationCallback = { movieViewModelFactory: MovieViewModel.MovieViewModelFactory ->
-            movieViewModelFactory.create(movieListType, language)
+            movieViewModelFactory.create(language)
         }
     )
 ) {
