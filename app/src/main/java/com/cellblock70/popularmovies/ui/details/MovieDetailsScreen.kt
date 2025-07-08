@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -95,7 +97,9 @@ fun MovieDetailsScreen(
                         text = movie.title.orEmpty(),
                         style = MaterialTheme.typography.headlineLarge,
                         color = textColor,
-                        modifier = Modifier.padding(top = 4.dp, start = 8.dp).weight(1f)
+                        modifier = Modifier
+                            .padding(top = 4.dp, start = 8.dp)
+                            .weight(1f)
                     )
                     IconButton(
                         modifier = Modifier.minimumInteractiveComponentSize(),
@@ -150,21 +154,22 @@ fun MovieDetailsScreen(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
+
+                items(items = value.trailers, key = { trailer -> trailer.id}) { trailer ->
+                    HyperlinkText(
+                        modifier = modifier.padding(
+                            horizontal = 16.dp,
+                            vertical = 4.dp
+                        ),
+                        text = trailer.name.orEmpty(),
+                        linkText = listOf(trailer.name.orEmpty()),
+                        hyperlinks = listOf(stringResource(R.string.youtube_link, trailer.link.orEmpty())),
+                        fontSize = 16.sp,
+                        linkTextFontWeight = FontWeight.SemiBold
+                    )
+                }
             }
-            items(value.trailers?.size ?: 0) { index ->
-                val trailer = value.trailers?.get(index) ?: return@items
-                HyperlinkText(
-                    modifier = modifier.padding(
-                        horizontal = 16.dp,
-                        vertical = 4.dp
-                    ),
-                    text = trailer.name.orEmpty(),
-                    linkText = listOf(trailer.name.orEmpty()),
-                    hyperlinks = listOf(stringResource(R.string.youtube_link, trailer.link.orEmpty())),
-                    fontSize = 16.sp,
-                    linkTextFontWeight = FontWeight.SemiBold
-                )
-            }
+
             if (value.reviews?.isNotEmpty() == true) {
                 item {
                     Text(
@@ -174,17 +179,27 @@ fun MovieDetailsScreen(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
-            }
-            items(value.reviews?.size ?: 0) { index ->
-                val review = value.reviews?.getOrElse(index) { return@items }
-                Column {
-                    StyledTextPair(modifier = modifier, titleText = stringResource(R.string.reviewer), valueText = review?.author.orEmpty())
-                    Text(modifier = modifier.padding(horizontal = 20.dp, vertical = 4.dp), text = review?.reviewText.toString(), color = textColor)
-                    if (index < ((value.reviews?.size?.minus(1)) ?: 0)) {
-                        HorizontalDivider(modifier.padding(horizontal = 20.dp, vertical = 12.dp))
+                items(items = value.reviews, key = { review -> review.id}) { review ->
+                    Card(
+                        modifier = modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                        colors = CardColors(contentColor = Color.White.copy(alpha = .2f), containerColor = Color.White.copy(alpha = .2f), disabledContainerColor = Color.White.copy(alpha = .2f), disabledContentColor = Color.White.copy(alpha = .2f))
+                    ) {
+                        Column {
+                            StyledTextPair(
+                                modifier = modifier.padding(top = 4.dp, start = 2.dp),
+                                titleText = stringResource(R.string.reviewer),
+                                valueText = review.author.orEmpty()
+                            )
+                            Text(
+                                modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                                text = review.reviewText.toString(),
+                                color = textColor
+                            )
+                        }
                     }
                 }
             }
+
         }
     }
 }
