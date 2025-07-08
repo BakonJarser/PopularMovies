@@ -52,13 +52,11 @@ android {
 }
 
 dependencies {
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1") {
         exclude(group = "com.android.support", module = "support-annotations")
     }
     testImplementation("junit:junit:4.13.2")
 
-    implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
     implementation("androidx.core:core-ktx:1.16.0")
     implementation("androidx.datastore:datastore-preferences:1.1.7")
 
@@ -71,6 +69,7 @@ dependencies {
     implementation("com.squareup.moshi:moshi:1.15.2")
     implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
     implementation("com.squareup.retrofit2:retrofit:3.0.0")
+    // todo switch to kotlinx serialization
     implementation("com.squareup.retrofit2:converter-moshi:3.0.0")
     implementation("com.squareup.okhttp3:logging-interceptor:5.0.0")
     implementation("com.jakewharton.timber:timber:5.0.1")
@@ -90,7 +89,6 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.9.1")
     implementation("io.coil-kt.coil3:coil-compose:3.2.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.2.0")
-    implementation("androidx.compose.compiler:compiler:1.5.15")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
     // Hilt
